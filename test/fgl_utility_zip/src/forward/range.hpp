@@ -11,7 +11,7 @@
 #include <fgl/utility/zip.hpp>
 
 #define FGL_SHORT_MACROS
-#include <fgl/debug./constexpr_assert.hpp>
+#include <fgl/debug/constexpr_assert.hpp>
 #include <fgl/types/traits.hpp>
 
 using fgl::traits::is_const_ref, fgl::traits::is_nonconst_ref;

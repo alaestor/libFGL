@@ -6,9 +6,9 @@
 /*
 	FGL_DEBUG_FIX_ME; // simple output
 	FGL_DEBUG_FIX("a message"); // providing a message
-	FGL_DEBUG_FIX_THIS(code); // message is code (which is still executed)
+	FGL_DEBUG_FIX_THIS(expression); // message is code (will be executed)
 
-	To get the short version, define: FGL_SHORT_MACROS (global FGL macro)
+	For short macros, define FGL_SHORT_MACROS (for all libFGL headers)
 	or specific to this file: FGL_DEBUG_FIXME_SHORT_MACROS
 
 	FIX_ME;
@@ -16,36 +16,31 @@
 	FIX_THIS( code );
 
 	To disable all [FIXME] output, define NDEBUG above this include.
-
-	[FIXME] provides a simple macro interface to leave reminders, notes,
-	code review tags, and document things that are a work-in-progress.
-	Sends formatted output to the FGL debug output stream
-	(std::cout by default, configurable). See example or fgl/debug/output.hpp
+	Or, set fgl::debug::output threshold to > fixme
 */
 /// EXAMPLE PROGRAM
 /*
-	#include <iostream>
-	#define FGL_SHORT_MACROS
-	#include <fgl/debug/fixme.hpp>
+#include <iostream>
+#define FGL_SHORT_MACROS
+#include <fgl/debug/fixme.hpp>
 
-	// can be executed at both compile-time and run-time
-	int add(int a, int b)
-	{
-		FIX_THIS( return a - b; )
-	}
+int add(int a, int b)
+{
+	FIX_THIS( return a - b; )
+}
 
-	int main()
-	{
-		// redirect global debug output to cerr instead of cout (default)
-		fgl::debug::output::Config::instance().change_output_stream(std::cerr);
+int main()
+{
+	// redirect global debug output to cerr instead of cout (default)
+	fgl::debug::output::config::instance().change_output_stream(std::cerr);
 
-		FIX_ME;
-		FIX_ME const int one{ 1};
-		const int two{ 2 }; FIX_ME
-		const int three{ add(one, two) };
-		std::cout << one << " + " << two << " = " << three << std::endl;
-		FIX("the author is an idiot")
-	}
+	FIX_ME;
+	FIX_ME const int one{ 1};
+	const int two{ 2 }; FIX_ME
+	const int three{ add(one, two) };
+	std::cout << one << " + " << two << " = " << three << std::endl;
+	FIX("the author is an idiot")
+}
 */
 /// EXAMPLE OUTPUT
 /*
@@ -63,9 +58,14 @@
 	[FIXME] provides a simple macro interface to leave reminders, notes,
 	code review tags, and document things that are a work-in-progress.
 
+	FIX_ME; will output an empty [FIXME] message with location info.
+	FIX("message"); will output a message.
+	FIX_THIS(expression); will output the expression (not the result).
+
 	This header guarentees not redefine any existing macros (will #error)
 
 	To disable all [FIXME] output, define NDEBUG above this include.
+	Or, set fgl::debug::output threshold to > fixme (will also disable echo).
 
 	To use short macros, define FGL_DEBUG_FIXME_SHORT_MACROS above this include.
 		Short macros (`FIX`, `FIX_ME`, `FIX_THIS`) are opt-in to avoid
@@ -73,26 +73,19 @@
 		Alternatively, define FGL_SHORT_MACROS (affects all FGL header macros).
 
 	To change the output string format, implement a function and assign to
-		`fgl::debug::fixme::Config::getInstance().formatter = my_formatter;`
-		The default is `fgl::debug::fixme::Config::default_formatter`
-
-	To change where fgl::debug output is sent, provide an ostream to
-		fgl::debug::Config::getInstance().change_output_stream( my_ostream );
-		The default is `std::cout`.
+		`fgl::debug::fixme::config::getInstance().formatter = my_formatter;`
+		The default is `fgl::debug::output::config::default_formatter`
 */
-
+/// INTERNAL NOTES
 /* TODO -> future module overhaul
 	Will still need a .h for macros
 */
-
 /* TODO -> future reflection overhaul
 	Complete overhaul when C++ gets reflection and compile-time output.
 	Separate compiletime and runtime FIXME interfaces. Minimize macro usage.
 	Lowest macro will expand to constexpr{reflection}? Macro may not be needed.
 */
 
-#include <functional>
-#include <ostream>
 #include <string_view>
 #include <source_location>
 
@@ -106,7 +99,7 @@
 #ifdef NDEBUG
 	#define FGL_DEBUG_FIX(message)
 	#define FGL_DEBUG_FIX_ME
-	#define FGL_DEBUG_FIX_THIS(code) code
+	#define FGL_DEBUG_FIX_THIS(expr) expr
 #else
 	#ifndef FGL_DEBUG_FIX
 ///////////////////////////////////////////////////////////////////////////////
@@ -128,13 +121,13 @@
 	#ifndef FGL_DEBUG_FIX_THIS
 		#ifndef FGL_DEBUG_FIX_THIS_IMPL
 ///////////////////////////////////////////////////////////////////////////////
-			#define FGL_DEBUG_FIX_THIS_IMPL(code) FGL_DEBUG_FIX(#code) code;
+			#define FGL_DEBUG_FIX_THIS_IMPL(expr) FGL_DEBUG_FIX(#expr) expr;
 ///////////////////////////////////////////////////////////////////////////////
 		#else
 			#error FGL_DEBUG_FIX_THIS_IMPL already defined
 		#endif // ifndef FGL_DEBUG_FIX_THIS_IMPL
 ///////////////////////////////////////////////////////////////////////////////
-		#define FGL_DEBUG_FIX_THIS(code) FGL_DEBUG_FIX_THIS_IMPL(code)
+		#define FGL_DEBUG_FIX_THIS(expr) FGL_DEBUG_FIX_THIS_IMPL(expr)
 ///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FGL_DEBUG_FIX_THIS already defined
@@ -161,7 +154,7 @@
 
 	#ifndef FIX_THIS
 ///////////////////////////////////////////////////////////////////////////////
-		#define FIX_THIS(code) FGL_DEBUG_FIX_THIS_IMPL(code)
+		#define FIX_THIS(expr) FGL_DEBUG_FIX_THIS_IMPL(expr)
 ///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FIX_THIS already defined (FGL_DEBUG_FIXME_SHORT_MACROS)
@@ -170,23 +163,14 @@
 
 namespace fgl::debug::fixme {
 
+using fixme_formatter_t = output::default_formatter_t;
+
 namespace internal {
 class config final
 {
-public:
-	static void default_formatter(
-		std::ostream& output_stream,
-		const std::string_view message,
-		const std::source_location source)
-	{ // TODO constexpr when std::string::operator+ is implemented?
-		output_stream
-			<< "[FIXME] file:" << source.file_name()
-			<< '(' << source.line() << ':' << source.column() << ") '"
-			<< source.function_name() << '\''
-			<< (message.empty() ? "" : "\n \\_____ ") << message << '\n';
-	}
-	using fixme_formatter_t = std::function<decltype(default_formatter)>;
+	FGL_SINGLETON_BOILERPLATE(config);
 
+public:
 	const fixme_formatter_t& formatter{ m_formatter };
 
 	void change_formatter(const fixme_formatter_t& custom_formatter) noexcept
@@ -197,13 +181,18 @@ public:
 		const std::source_location source
 			= std::source_location::current()) const
 	{
-		auto& ostream{ fgl::debug::output::config::instance().output_stream() };
-		m_formatter(ostream, message, source );
+		if (output::config::instance().channel_is_enabled(output::fixme))
+		{
+			output::config::instance().output_stream()
+				<< m_formatter(output::fixme, message, source)
+				<< '\n';
+		}
 	}
 
 private:
-	FGL_SINGLETON_BOILERPLATE(config);
-	fixme_formatter_t m_formatter{ default_formatter };
+	fixme_formatter_t m_formatter{
+		output::internal::config::default_formatter
+	};
 };
 }// namespace internal
 

@@ -109,7 +109,7 @@ void read_binary_file(
 		if (std::ifstream ifs(file_path, std::ios::binary);
 			ifs)
 		{
-			ifs.exceptions(std::ios::badbit | std::ios::failbit);
+			ifs.exceptions(ifs.badbit | ifs.failbit | ifs.eofbit);
 			ifs.read(
 				reinterpret_cast<char*>(std::ranges::data(output)),
 				static_cast<std::streamsize>(read_size)
