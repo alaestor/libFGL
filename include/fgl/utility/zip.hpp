@@ -164,7 +164,9 @@ template<std::ranges::forward_range ... T_ranges>
 constexpr auto zip(T_ranges&& ... args)
 {
 	using fgl::internal::forward_zip_iterator;
-	const zip_sentinel_t shortest{ std::min({ std::ranges::ssize(args)... }) };
+	const zip_sentinel_t shortest{
+		std::min({static_cast<std::ptrdiff_t>(std::ranges::ssize(args))...})
+	};
 	return fgl::range_wrapper(
 		forward_zip_iterator(std::begin(std::forward<T_ranges>(args))...),
 		shortest
@@ -177,7 +179,9 @@ template<std::ranges::forward_range ... T_ranges>
 constexpr auto czip(T_ranges&& ... args)
 {
 	using fgl::internal::forward_zip_iterator;
-	const zip_sentinel_t shortest{ std::min({ std::ranges::ssize(args)... }) };
+	const zip_sentinel_t shortest{
+		std::min({static_cast<std::ptrdiff_t>(std::ranges::ssize(args))...})
+	};
 	return fgl::range_wrapper(
 		forward_zip_iterator(std::cbegin(std::forward<T_ranges>(args))...),
 		shortest

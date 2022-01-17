@@ -5,7 +5,7 @@
 #include "forward/range.hpp"
 
 #define FGL_SHORT_MACROS
-#include <fgl/debug./constexpr_assert.hpp>
+#include <fgl/debug/constexpr_assert.hpp>
 
 #ifdef NDEBUG
 	#error NDEBUG must not be defined for tests because they rely on assertions
