@@ -1,7 +1,7 @@
 #define FGL_DEBUG_FIXME_SHORT_MACROS
 #include <fgl/debug/fixme.hpp>
 
-#include "notmain.hpp"
+#include "notmain.h"
 
 #ifdef NDEBUG
 	#error NDEBUG must not be defined for tests because they rely on assertions

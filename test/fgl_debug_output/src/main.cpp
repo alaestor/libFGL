@@ -5,7 +5,7 @@
 
 #include <fgl/debug/output.hpp>
 
-#include "notmain.hpp"
+#include "notmain.h"
 
 #ifdef NDEBUG
 	#error NDEBUG must not be defined for tests because they rely on assertions

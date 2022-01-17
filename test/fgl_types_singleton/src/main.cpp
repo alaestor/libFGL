@@ -1,7 +1,7 @@
 #include <cstdlib> // EXIT_SUCCESS, EXIT_FAILURE
 #include <cassert>
 
-#include "notmain.hpp"
+#include "notmain.h"
 #include "single_class.hpp"
 
 #ifdef NDEBUG

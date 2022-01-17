@@ -6,30 +6,29 @@
 #define FGL_DEBUG_FIXME_SHORT_MACROS
 #include <fgl/debug/fixme.hpp>
 
-#include "notmain.hpp"
+#include "notmain.h"
 
 #ifdef NDEBUG
 	#error NDEBUG must not be defined for tests because they rely on assertions
 #endif // NDEBUG
 
-std::string fixme_fmt_out(
+void fixme_fmt_out(
+	std::ostream& output_stream,
 	const long long int line,
 	const std::string_view filePath,
 	const std::string_view funcName,
 	const std::string_view message)
 {
-	std::stringstream ss;
-	ss << line << filePath << funcName << message;
-	return ss.str();
+	output_stream << line << filePath << funcName << message;
 }
 
-std::string fixme_fmt(
-	const fgl::debug::output::channel_e channel,
+void fixme_fmt(
+	std::ostream& output_stream,
 	const std::string_view message,
 	const std::source_location source)
 {
-	assert(channel == fgl::debug::output::channel_e::fixme);
-	return fixme_fmt_out(
+	fixme_fmt_out(
+		output_stream,
 		source.line(),
 		source.file_name(),
 		source.function_name(),
@@ -43,16 +42,18 @@ std::string sfmt(
 	const std::string_view funcName,
 	const std::string_view message = "")
 {
-	return fixme_fmt_out(line, filePath, funcName, message) + '\n';
+	std::stringstream s;
+	fixme_fmt_out(s, line, filePath, funcName, message);
+	return s.str();
 }
 
 std::string sfmt(
 	const std::string_view message = "",
 	const std::source_location source = std::source_location::current())
 {
-	return
-		fixme_fmt(fgl::debug::output::channel_e::fixme, message, source)
-		+ '\n';
+	std::stringstream s;
+	fixme_fmt(s, message, source);
+	return s.str();
 }
 
 int main()
