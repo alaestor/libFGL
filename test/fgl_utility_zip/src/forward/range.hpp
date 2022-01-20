@@ -74,7 +74,7 @@ bool zip_expected_behavior()
 	using zip_expected_type = range_wrapper<zip_it_begin_t, zip_sentinel_t>;
 	static_assert(forward_range<zip_expected_type>);
 
-	auto zipped{ zip(array, map, list, vector, deque) };
+	auto zipped{ zip(smallest_length, array, map, list, vector, deque) };
 	static_assert(std::is_same_v<decltype(zipped), zip_expected_type>);
 
 	static_assert(std::is_same_v<decltype(zipped.begin()), zip_it_begin_t>);
@@ -84,6 +84,15 @@ bool zip_expected_behavior()
 	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 	constexpr_assert(zipped.begin() == begin_zip_it);
 	#pragma GCC diagnostic pop // ignored "-Wdeprecated-declarations"
+
+	{
+		auto auto_sized{ zip(array, map, list, vector, deque) };
+		static_assert(std::is_same_v<decltype(zipped), decltype(auto_sized)>);
+		#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+		constexpr_assert(zipped.begin() == auto_sized.begin());
+		#pragma GCC diagnostic pop // ignored "-Wdeprecated-declarations"
+		constexpr_assert(zipped.end() == auto_sized.end());
+	}
 
 	static_assert(std::is_same_v<decltype(zipped.end()), zip_sentinel_t>);
 	const zip_sentinel_t end_zip_it{
@@ -172,7 +181,7 @@ bool czip_expected_behavior()
 	using zip_expected_type = range_wrapper<zip_it_begin_t, zip_sentinel_t>;
 	static_assert(forward_range<zip_expected_type>);
 
-	auto zipped{ czip(array, map, list, vector, deque) };
+	auto zipped{ czip(smallest_length, array, map, list, vector, deque) };
 	static_assert(std::is_same_v<decltype(zipped), zip_expected_type>);
 
 	static_assert(std::is_same_v<decltype(zipped.begin()), zip_it_begin_t>);
@@ -186,6 +195,15 @@ bool czip_expected_behavior()
 	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 	constexpr_assert(zipped.begin() == begin_zip_it);
 	#pragma GCC diagnostic pop // ignored "-Wdeprecated-declarations"
+
+	{
+		auto auto_sized{ czip(array, map, list, vector, deque) };
+		static_assert(std::is_same_v<decltype(zipped), decltype(auto_sized)>);
+		#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+		constexpr_assert(zipped.begin() == auto_sized.begin());
+		#pragma GCC diagnostic pop // ignored "-Wdeprecated-declarations"
+		constexpr_assert(zipped.end() == auto_sized.end());
+	}
 
 	static_assert(std::is_same_v<decltype(zipped.end()), zip_sentinel_t>);
 	const zip_sentinel_t end_zip_it{

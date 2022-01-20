@@ -90,8 +90,8 @@ public:
 	using difference_type = decltype(m_index);
 	using iterator_category = std::forward_iterator_tag;
 
-	// Getting a redefinition error? T_iters mustn't be empty.
-	[[nodiscard]] explicit constexpr forward_zip_iterator() noexcept = default;
+	[[nodiscard]] explicit constexpr forward_zip_iterator() noexcept
+		= default; // Getting a redefinition error? T_iters mustn't be empty.
 
 	[[nodiscard]] explicit constexpr forward_zip_iterator(T_iters&& ... args)
 	: m_iters(std::forward<T_iters>(args)...)
@@ -144,6 +144,9 @@ public:
 	}
 };
 
+
+// sanity checks
+
 static_assert(std::forward_iterator<forward_zip_iterator<char*>>);
 static_assert(std::forward_iterator<forward_zip_iterator<const char*>>);
 static_assert(
@@ -154,38 +157,70 @@ static_assert(
 	>
 );
 
-using forward_zip_sentinel_t = forward_zip_iterator<char*>::difference_type;
+//using forward_zip_sentinel_t = forward_zip_iterator<char*>::difference_type;
+
+// utility functions
+
+[[nodiscard]] constexpr
+zip_sentinel_t shortest(const std::integral auto& ... lengths)
+{
+	return std::min({static_cast<zip_sentinel_t>(lengths)...});
+}
 
 }// namespace internal
 
+/// fgl::zip public interface
+// should these even bother forwarding?
+
 /*Returns a range iterating multiple ranges of differing types.
-Example usage: `for (const auto& [v1,v2,v3] : czip(a,b,c)) v1 += v2 + v3;`*/
-template<std::ranges::forward_range ... T_ranges>
-constexpr auto zip(T_ranges&& ... args)
+The zip range's sentinel is determined by the `length` parameter, which is
+converted to a signed integral (zip_sentinel_t) via static_cast.
+Example usage: `for (const auto& [va,vb,vc] : zip(a.size(), a, b, c))`*/
+template <std::ranges::forward_range ... T_ranges>
+constexpr auto zip(const std::integral auto length, T_ranges&& ... args)
 {
 	using fgl::internal::forward_zip_iterator;
-	const zip_sentinel_t shortest{
-		std::min({static_cast<std::ptrdiff_t>(std::ranges::ssize(args))...})
-	};
 	return fgl::range_wrapper(
 		forward_zip_iterator(std::begin(std::forward<T_ranges>(args))...),
-		shortest
+		static_cast<zip_sentinel_t>(length)
+	);
+}
+
+/*Returns a range iterating multiple ranges of differing types.
+The zip range's sentinel is determined by the smallest range.
+Example usage: `for (const auto& [va,vb,vc] : zip(a, b, c))`*/
+template <std::ranges::forward_range ... T_ranges>
+constexpr auto zip(T_ranges&& ... args)
+{
+	using internal::shortest, std::ranges::ssize;
+	return fgl::zip(shortest(ssize(args)...), std::forward<T_ranges>(args)...);
+}
+
+/// czip
+
+
+/*Returns a range iterating multiple const ranges of differing types.
+The zip range's sentinel is determined by the `length` parameter, which is
+converted to a signed integral (zip_sentinel_t) via static_cast.
+Example usage: `for (const auto& [va,vb,vc] : zip(a.size(), a, b, c))`*/
+template <std::ranges::forward_range ... T_ranges>
+constexpr auto czip(const std::integral auto length, T_ranges&& ... args)
+{
+	using fgl::internal::forward_zip_iterator;
+	return fgl::range_wrapper(
+		forward_zip_iterator(std::cbegin(std::forward<T_ranges>(args))...),
+		static_cast<zip_sentinel_t>(length)
 	);
 }
 
 /*Returns a range iterating multiple const ranges of differing types.
-Example usage: `for (const auto& [v1,v2,v3] : czip(a,b,c)) func(v1,v2,v3);`*/
-template<std::ranges::forward_range ... T_ranges>
+The zip range's sentinel is determined by the smallest range.
+Example usage: `for (const auto& [va,vb,vc] : zip(a, b, c))`*/
+template <std::ranges::forward_range ... T_ranges>
 constexpr auto czip(T_ranges&& ... args)
 {
-	using fgl::internal::forward_zip_iterator;
-	const zip_sentinel_t shortest{
-		std::min({static_cast<std::ptrdiff_t>(std::ranges::ssize(args))...})
-	};
-	return fgl::range_wrapper(
-		forward_zip_iterator(std::cbegin(std::forward<T_ranges>(args))...),
-		shortest
-	);
+	using internal::shortest, std::ranges::ssize;
+	return fgl::czip(shortest(ssize(args)...), std::forward<T_ranges>(args)...);
 }
 
 } // namespace fgl
