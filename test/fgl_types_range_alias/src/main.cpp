@@ -2,7 +2,7 @@
 #include <ranges>
 #include <concepts>
 
-#include <fgl/types/range_wrapper.hpp>
+#include <fgl/types/range_alias.hpp>
 
 #define FGL_SHORT_MACROS
 #include <fgl/debug/constexpr_assert.hpp>
@@ -16,14 +16,14 @@ int main()
 {
 	[]() consteval noexcept -> void
 	{
-		using fgl::range_wrapper;
+		using fgl::range_alias;
 		using fgl::traits::is_nonconst_ref;
 
 		constexpr int len{ 10 };
 		int a[len]{ 0 };
 		int* const ptr = &a[0];
 
-		const range_wrapper r(ptr, ptr+len);
+		const range_alias r(ptr, ptr+len);
 		static_assert(std::ranges::common_range<decltype(r)>);
 		static_assert(std::ranges::forward_range<decltype(r)>);
 		static_assert(std::ranges::contiguous_range<decltype(r)>);

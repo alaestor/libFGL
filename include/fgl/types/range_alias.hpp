@@ -1,16 +1,16 @@
 #pragma once
-#ifndef FGL_TYPES_RANGE_WRAPPER_HPP_INCLUDED
-#define FGL_TYPES_RANGE_WRAPPER_HPP_INCLUDED
+#ifndef FGL_TYPES_RANGE_ALIAS_HPP_INCLUDED
+#define FGL_TYPES_RANGE_ALIAS_HPP_INCLUDED
 
 /// QUICK-START GUIDE
 /*
-    const fgl::range_wrapper my_range(begin_iter, end_sentinel);
+    const fgl::range_alias my_range(begin_iter, end_sentinel);
 	// or
 	const auto my_range{ make_range(raw_ptr, length) };
 
 	for (const auto& v : my_range) ...
 
-	fgl::range_wrapper can be used to easily create modern and safe C++ ranges
+	fgl::range_alias can be used to easily create modern and safe C++ ranges
 	from raw pointers, or other iterators. The helper function make_range()
 	makes it easy to create a range from a C-style pointer and length.
 */
@@ -21,7 +21,7 @@
 	#include <ranges> // ranges::size
 	#include <memory> // unique_ptr
 
-	#include <fgl/types/range_wrapper.hpp>
+	#include <fgl/types/range_alias.hpp>
 
 	int main()
 	{
@@ -30,8 +30,8 @@
 		const std::unique_ptr<int[]> memory_owner(new int[length]);
 		int* const ptr{ memory_owner.get() }; // raw ptr for readability
 
-		// wrapper can be used to make a safe and modern interface
-		const fgl::range_wrapper range1(ptr, ptr+length);
+		// can be used to make a safe and modern interface
+		const fgl::range_alias range1(ptr, ptr+length);
 
 		const auto range2{ fgl::make_range(ptr, length) }; // helper factory
 
@@ -66,24 +66,24 @@ template
 	std::input_or_output_iterator T_begin,
 	std::sentinel_for<T_begin> T_end
 >
-struct range_wrapper
+struct range_alias
 {
 	T_begin m_begin;
 	T_end m_end;
 
 	public:
-	constexpr range_wrapper() = delete;
-	constexpr range_wrapper(const range_wrapper&) = delete; // why not copy?
+	constexpr range_alias() = delete;
+	constexpr range_alias(const range_alias&) = delete; // why not copy?
 
 	[[nodiscard]] explicit constexpr
-	range_wrapper(const T_begin& begin, const T_end& end)
+	range_alias(const T_begin& begin, const T_end& end)
 	: m_begin(begin), m_end(end)
-	{ static_assert(std::ranges::range<range_wrapper<T_begin, T_end>>); }
+	{ static_assert(std::ranges::range<range_alias<T_begin, T_end>>); }
 
 	[[nodiscard]] explicit constexpr
-	range_wrapper(T_begin&& begin, T_end&& end)
+	range_alias(T_begin&& begin, T_end&& end)
 	: m_begin(std::move(begin)), m_end(std::move(end))
-	{ static_assert(std::ranges::range<range_wrapper<T_begin, T_end>>); }
+	{ static_assert(std::ranges::range<range_alias<T_begin, T_end>>); }
 
 	[[nodiscard]] constexpr T_begin begin() const noexcept
 	{ return m_begin; }
@@ -98,16 +98,16 @@ struct range_wrapper
 	{ return m_end; }
 };
 
-// Constructs a range_wrapper from a (non-void) pointer and element count.
+// Constructs a range_alias from a (non-void) pointer and element count.
 template <typename T>
 requires std::is_pointer_v<T> && (std::is_same_v<T, void*> == false)
 [[nodiscard]] constexpr auto make_range(
 	const T pointer,
 	const std::size_t elements) noexcept
 {
-	return range_wrapper(pointer, pointer + elements);
+	return range_alias(pointer, pointer + elements);
 }
 
 }// namespace fgl
 
-#endif // FGL_TYPES_RANGE_WRAPPER_HPP_INCLUDED
+#endif // FGL_TYPES_RANGE_ALIAS_HPP_INCLUDED

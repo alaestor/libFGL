@@ -7,7 +7,7 @@
 #include <ranges>
 #include <algorithm>
 
-#include <fgl/types/range_wrapper.hpp>
+#include <fgl/types/range_alias.hpp>
 #include <fgl/utility/zip.hpp>
 
 #define FGL_SHORT_MACROS
@@ -21,7 +21,7 @@ using fgl::traits::is_const_ref, fgl::traits::is_nonconst_ref;
 namespace forward::range {
 
 using
-	fgl::range_wrapper,
+	fgl::range_alias,
 	fgl::zip,
 	fgl::czip,
 	fgl::internal::forward_zip_iterator;
@@ -71,7 +71,7 @@ bool zip_expected_behavior()
 	using zip_sentinel_t = typename zip_it_begin_t::difference_type;
 	static_assert(std::sentinel_for<zip_sentinel_t, zip_it_begin_t>);
 
-	using zip_expected_type = range_wrapper<zip_it_begin_t, zip_sentinel_t>;
+	using zip_expected_type = range_alias<zip_it_begin_t, zip_sentinel_t>;
 	static_assert(forward_range<zip_expected_type>);
 
 	auto zipped{ zip(smallest_length, array, map, list, vector, deque) };
@@ -151,7 +151,7 @@ consteval bool zip_rvalues()
 	using zip_sentinel_t = typename zip_it_begin_t::difference_type;
 	static_assert(std::sentinel_for<zip_sentinel_t, zip_it_begin_t>);
 
-	using zip_expected_type = range_wrapper<zip_it_begin_t, zip_sentinel_t>;
+	using zip_expected_type = range_alias<zip_it_begin_t, zip_sentinel_t>;
 	static_assert(forward_range<zip_expected_type>);
 
 	auto zipped{ zip(array_t{0,1,2,3,4,5,6,7}) };
@@ -178,7 +178,7 @@ bool czip_expected_behavior()
 	using zip_sentinel_t = typename zip_it_begin_t::difference_type;
 	static_assert(std::sentinel_for<zip_sentinel_t, zip_it_begin_t>);
 
-	using zip_expected_type = range_wrapper<zip_it_begin_t, zip_sentinel_t>;
+	using zip_expected_type = range_alias<zip_it_begin_t, zip_sentinel_t>;
 	static_assert(forward_range<zip_expected_type>);
 
 	auto zipped{ czip(smallest_length, array, map, list, vector, deque) };
@@ -262,7 +262,7 @@ consteval bool czip_rvalues()
 	using zip_sentinel_t = typename zip_it_begin_t::difference_type;
 	static_assert(std::sentinel_for<zip_sentinel_t, zip_it_begin_t>);
 
-	using zip_expected_type = range_wrapper<zip_it_begin_t, zip_sentinel_t>;
+	using zip_expected_type = range_alias<zip_it_begin_t, zip_sentinel_t>;
 	static_assert(forward_range<zip_expected_type>);
 
 	auto zipped{ czip(array_t{0,1,2,3,4,5,6,7}) };

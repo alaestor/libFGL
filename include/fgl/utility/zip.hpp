@@ -61,7 +61,7 @@ int main()
 #include <iterator>
 #include <tuple>
 
-#include "../types/range_wrapper.hpp"
+#include "../types/range_alias.hpp"
 
 namespace fgl {
 
@@ -161,7 +161,7 @@ static_assert(
 
 // utility functions
 
-[[nodiscard]] constexpr
+[[nodiscard]] constexpr inline
 zip_sentinel_t shortest(const std::integral auto& ... lengths)
 {
 	return std::min({static_cast<zip_sentinel_t>(lengths)...});
@@ -180,7 +180,7 @@ template <std::ranges::forward_range ... T_ranges>
 constexpr auto zip(const std::integral auto length, T_ranges&& ... args)
 {
 	using fgl::internal::forward_zip_iterator;
-	return fgl::range_wrapper(
+	return fgl::range_alias(
 		forward_zip_iterator(std::begin(std::forward<T_ranges>(args))...),
 		static_cast<zip_sentinel_t>(length)
 	);
@@ -207,7 +207,7 @@ template <std::ranges::forward_range ... T_ranges>
 constexpr auto czip(const std::integral auto length, T_ranges&& ... args)
 {
 	using fgl::internal::forward_zip_iterator;
-	return fgl::range_wrapper(
+	return fgl::range_alias(
 		forward_zip_iterator(std::cbegin(std::forward<T_ranges>(args))...),
 		static_cast<zip_sentinel_t>(length)
 	);
