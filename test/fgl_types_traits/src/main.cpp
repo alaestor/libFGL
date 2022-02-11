@@ -9,6 +9,109 @@
 	#error NDEBUG must not be defined for tests because they rely on assertions
 #endif // NDEBUG
 
+consteval bool test_byte_type()
+{
+	using fgl::traits::byte_type;
+
+	static_assert(byte_type<std::byte>);
+	static_assert(byte_type<char>);
+	static_assert(byte_type<unsigned char>);
+
+	static_assert(!byte_type<void>);
+	static_assert(!byte_type<signed char>);
+	static_assert(!byte_type<int>);
+	static_assert(!byte_type<short>);
+	static_assert(!byte_type<double>);
+
+	return true;
+}
+
+template <typename T>
+consteval bool test_numeric_impl_true()
+{
+	using fgl::traits::numeric_type;
+	static_assert(numeric_type<T>);
+	static_assert(numeric_type<const T>);
+	static_assert(numeric_type<volatile T>);
+	static_assert(numeric_type<const volatile T>);
+	static_assert(numeric_type<T const>);
+	static_assert(numeric_type<T volatile>);
+	static_assert(numeric_type<T const volatile>);
+	return true;
+}
+
+template <typename T>
+consteval bool test_numeric_impl_false()
+{
+	using fgl::traits::numeric_type;
+	static_assert(!numeric_type<T>);
+	static_assert(!numeric_type<const T>);
+	static_assert(!numeric_type<volatile T>);
+	static_assert(!numeric_type<const volatile T>);
+	static_assert(!numeric_type<T const>);
+	static_assert(!numeric_type<T volatile>);
+	static_assert(!numeric_type<T const volatile>);
+	return true;
+}
+
+consteval bool test_numeric_type()
+{
+	static_assert(test_numeric_impl_true<signed char>());
+	static_assert(test_numeric_impl_true<char>());
+	static_assert(test_numeric_impl_true<short>());
+	static_assert(test_numeric_impl_true<int>());
+	static_assert(test_numeric_impl_true<long>());
+	static_assert(test_numeric_impl_true<long long>());
+	static_assert(test_numeric_impl_true<unsigned char>());
+	static_assert(test_numeric_impl_true<unsigned short>());
+	static_assert(test_numeric_impl_true<unsigned int>());
+	static_assert(test_numeric_impl_true<unsigned long>());
+	static_assert(test_numeric_impl_true<unsigned long long>());
+	static_assert(test_numeric_impl_true<float>());
+	static_assert(test_numeric_impl_true<double>());
+	static_assert(test_numeric_impl_true<long double>());
+	static_assert(test_numeric_impl_false<char*>());
+	static_assert(test_numeric_impl_false<int&>());
+	static_assert(test_numeric_impl_false<int[4]>());
+	static_assert(test_numeric_impl_false<int(&)[4]>());
+	static_assert(test_numeric_impl_false<void>());
+	return true;
+}
+
+consteval bool test_not_same()
+{
+	using fgl::traits::not_same_as;
+	static_assert(!not_same_as<int, int>);
+	static_assert(not_same_as<int, int&>);
+	static_assert(not_same_as<int, float>);
+	static_assert(not_same_as<float, double>);
+	static_assert(not_same_as<unsigned int, int>);
+	static_assert(not_same_as<char, signed char>);
+	static_assert(not_same_as<char, unsigned char>);
+	static_assert(not_same_as<short[5], short*>);
+	static_assert(not_same_as<void*, void>);
+	static_assert(!not_same_as<void, void>);
+	static_assert(!not_same_as<void*, void*>);
+	static_assert(not_same_as<void* const, void*>);
+	static_assert(not_same_as<void* volatile, void*>);
+	static_assert(not_same_as<void* const volatile, void*>);
+	static_assert(not_same_as<const void*, void*>);
+	static_assert(not_same_as<volatile void*, void*>);
+	static_assert(not_same_as<const volatile void*, void*>);
+	static_assert(not_same_as<const void* const, void*>);
+	static_assert(not_same_as<volatile void* volatile, void*>);
+	static_assert(not_same_as<const volatile void* const volatile, void*>);
+	return true;
+}
+
+consteval bool test_type_concepts()
+{
+	static_assert(test_byte_type());
+	static_assert(test_numeric_type());
+	static_assert(test_not_same());
+	return true;
+}
+
 consteval bool test_ref_traits()
 {
 	using
@@ -64,23 +167,6 @@ consteval bool test_remove_all_pointers()
 	return true;
 }
 
-consteval bool test_byte_type()
-{
-	using fgl::traits::byte_type;
-
-	static_assert(byte_type<std::byte>);
-	static_assert(byte_type<char>);
-	static_assert(byte_type<unsigned char>);
-
-	static_assert(!byte_type<void>);
-	static_assert(!byte_type<signed char>);
-	static_assert(!byte_type<int>);
-	static_assert(!byte_type<short>);
-	static_assert(!byte_type<double>);
-
-	return true;
-}
-
 template <typename T>
 consteval bool for_all_cvptr_permutations_of()
 {
@@ -118,14 +204,13 @@ consteval bool test_pointer_traits()
 {
 	static_assert(test_remove_cvptr_t());
 	static_assert(test_remove_all_pointers());
-	static_assert(test_byte_type());
 	static_assert(test_pointer_to_byte());
-
 	return true;
 }
 
 int main()
 {
+	static_assert(test_type_concepts());
 	static_assert(test_ref_traits());
 	static_assert(test_pointer_traits());
 	return EXIT_SUCCESS;

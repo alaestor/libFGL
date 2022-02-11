@@ -68,6 +68,7 @@ hi
 #include <optional>
 
 #include "../types/traits.hpp" // byte_type
+#include "../types/range_constraints.hpp" // contiguous_range_byte_type
 
 namespace fgl {
 
@@ -92,11 +93,9 @@ noexcept
 /*Throws on failure.
 If bytes_to_read is 0 it will be the size of the file obtained from filesystem.
 The size of the output range must be >= bytes_to_read.*/
-template <std::ranges::contiguous_range T_range>
-requires fgl::traits::byte_type<std::ranges::range_value_t<T_range>>
 void read_binary_file(
 	const std::filesystem::path& file_path,
-	T_range& output,
+	fgl::contiguous_range_byte_type auto& output,
 	const std::size_t bytes_to_read = 0)
 	// wish i could `bytes_to_read = get_file_size(file_path)`, but no...
 {
@@ -139,11 +138,9 @@ std::vector<T> read_binary_file(const std::filesystem::path& file_path)
 /*Best effort. No information about the error will be provided.
 If known_file_size is `0`, the file size will be obtained from std::filesystem.
 The size of the output range must be >= the size of the file.*/
-template <std::ranges::contiguous_range T_range>
-requires fgl::traits::byte_type<typename T_range::value_type>
 bool read_binary_file_noexcept(
 	const std::filesystem::path& file_path,
-	T_range& output,
+	fgl::contiguous_range_byte_type auto& output,
 	const std::size_t known_file_size = 0)
 noexcept try
 {
@@ -164,11 +161,9 @@ catch (...) { return std::nullopt; }
 
 /*Throws on failure.
 If length is `0`, the size of the input range will be used*/
-template <std::ranges::contiguous_range T_range>
-requires fgl::traits::byte_type<typename T_range::value_type>
 void write_binary_file(
 	const std::filesystem::path& file_path,
-	const T_range& input,
+	const fgl::contiguous_range_byte_type auto& input,
 	const std::size_t length = 0,
 	const std::ios::openmode mode = std::ios::trunc)
 {
@@ -192,11 +187,9 @@ void write_binary_file(
 
 /*Best effort. No information about the error will be provided.
 If length is `0`, the size of the input range will be used.*/
-template <std::ranges::contiguous_range T_range>
-requires fgl::traits::byte_type<typename T_range::value_type>
 bool write_binary_file_noexcept(
 	const std::filesystem::path& file_path,
-	const T_range& input,
+	const fgl::contiguous_range_byte_type auto& input,
 	const std::size_t length = 0,
 	const std::ios::openmode mode = std::ios::trunc)
 noexcept try

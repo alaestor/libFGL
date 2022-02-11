@@ -20,7 +20,7 @@
 	std::byte* bptr = ptr;
 */
 
-#include "../types/traits.hpp"
+#include "./traits.hpp"
 
 namespace fgl {
 

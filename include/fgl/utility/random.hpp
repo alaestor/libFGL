@@ -64,6 +64,7 @@ between min and max double, normal dist: -inf
 #include <cstdint> // uint_fast64_t
 #include <concepts> // integral, floating_point
 #include <limits> // numeric_limits
+#include <type_traits> // conditional
 #include <random>
 
 #include "../types/traits.hpp" // numeric_type

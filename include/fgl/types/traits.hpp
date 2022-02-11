@@ -4,6 +4,7 @@
 
 #include <cstddef> // byte
 #include <type_traits>
+#include <ranges>
 #include <concepts>
 
 namespace fgl::traits {
@@ -15,8 +16,12 @@ concept byte_type =
 	|| std::same_as<std::remove_cv_t<T>, unsigned char>
 ; // no one should use signed char for raw bytes...
 
-template<typename T>
+template <typename T>
 concept numeric_type = std::integral<T> || std::floating_point<T>;
+
+template <typename T1, typename T2>
+concept not_same_as = (std::same_as<T1, T2> == false);
+
 
 /// Pointers
 
@@ -44,6 +49,13 @@ concept pointer_to_byte =
 	)
 ;
 
+template <typename T>
+concept pointer_to_non_void =
+	std::is_pointer_v<T>
+	&& (!std::is_void_v<std::remove_cv_t<remove_all_pointers_t<T>>>)
+;
+
+
 /// Reference
 
 template <typename T, typename U = T>
@@ -70,17 +82,17 @@ inline constexpr bool satisfies_concept_lambda{
 template <auto T_concept_lambda, typename T>
 concept for_each_cv_permutation =
 	satisfies_concept_lambda<T_concept_lambda, T>
-	&& satisfies_concept_lambda<T_concept_lambda, const T>
-	&& satisfies_concept_lambda<T_concept_lambda, volatile T>
-	&& satisfies_concept_lambda<T_concept_lambda, const volatile T>
+	&& satisfies_concept_lambda<T_concept_lambda, T const>
+	&& satisfies_concept_lambda<T_concept_lambda, T volatile>
+	&& satisfies_concept_lambda<T_concept_lambda, T const volatile>
 ;
 
 template <auto T_concept_lambda, typename T>
 concept for_each_cvptr_permutation =
 	for_each_cv_permutation<T_concept_lambda, T*>
-	&& for_each_cv_permutation<T_concept_lambda, T* const>
-	&& for_each_cv_permutation<T_concept_lambda, T* volatile>
-	&& for_each_cv_permutation<T_concept_lambda, T* const volatile>
+	&& for_each_cv_permutation<T_concept_lambda, const T*>
+	&& for_each_cv_permutation<T_concept_lambda, volatile T*>
+	&& for_each_cv_permutation<T_concept_lambda, const volatile T*>
 ;
 
 /*

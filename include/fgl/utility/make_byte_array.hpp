@@ -42,11 +42,13 @@
 #include <utility> // index_sequence, make_index_sequence
 #include <algorithm> // copy
 #include <array>
+#include "../types/ctypes.hpp"
 
 namespace fgl {
 // returns a std::array of std::byte from cstring literal (excludes null term).
 template <std::size_t T_length> [[nodiscard]] constexpr
-std::array<std::byte, T_length-1> make_byte_array(const char (&cstr)[T_length])
+std::array<std::byte, T_length-1> make_byte_array(
+	fgl::carray<const char, T_length>& cstr)
 {
 	constexpr std::size_t arrayLength{ T_length - 1 }; // no null term
 	return
@@ -64,10 +66,11 @@ namespace internal {
 template <std::size_t N>
 struct byte_array_literal_helper final
 {
-    char char_array[N]{};
+	using char_array_t = fgl::carray<char, N>;
+    char_array_t char_array{};
 
 	[[nodiscard]] consteval
-	byte_array_literal_helper(const char (&cstring_literal)[N]) noexcept
+	byte_array_literal_helper(const char_array_t& cstring_literal) noexcept
     {
         std::ranges::copy(cstring_literal, char_array);
     }

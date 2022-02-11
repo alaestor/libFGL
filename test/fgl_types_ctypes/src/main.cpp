@@ -12,14 +12,22 @@
 
 consteval bool test_static_ctypes()
 {
-	using namespace fgl::ctypes;
-	static_assert(std::is_same_v<cstring, const char*>);
-	static_assert(std::is_same_v<cbyte, unsigned char>);
+	static_assert(std::is_same_v<fgl::cstring, const char*>);
+	static_assert(std::is_same_v<fgl::cbyte, unsigned char>);
+	return true;
+}
+
+consteval bool test_carray()
+{
+	static_assert(std::is_same_v<fgl::carray<char, 10>, char[10]>);
+	static_assert(std::is_same_v<fgl::carray<double, 1>, double[1]>);
+	static_assert(std::is_same_v<fgl::carray<const int, 3>&, const int(&)[3]>);
 	return true;
 }
 
 int main()
 {
 	static_assert(test_static_ctypes());
+	static_assert(test_carray());
 	return EXIT_SUCCESS;
 }

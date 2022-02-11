@@ -51,8 +51,7 @@ enum channel_e : uint_fast8_t
 };
 
 /// CAUTION : this will become a constexpr string in future versions
-static constexpr std::array<fgl::ctypes::cstring, channel_e::MAX>
-channel_strings
+static constexpr std::array<fgl::cstring, channel_e::MAX> channel_strings
 {
 	"ECHO",
 	"FIXME",
@@ -69,7 +68,8 @@ class config final
 public:
 	channel_e output_threshold{ channel_e::MAX };
 
-	[[nodiscard]] bool channel_is_enabled(const channel_e channel) const noexcept
+	[[nodiscard]] bool channel_is_enabled(const channel_e channel)
+	const noexcept
 	{
 		return output_threshold >= channel;
 	}

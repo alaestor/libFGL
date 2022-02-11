@@ -2,6 +2,11 @@
 #ifndef FGL_DEBUG_CONSTEXPR_ASSERT_HPP_INCLUDED
 #define FGL_DEBUG_CONSTEXPR_ASSERT_HPP_INCLUDED
 
+/*
+	Trying to figure out why constexpr_assert is not defined?
+	Make sure to define #FGL_SHORT_MACROS before including any libFGL headers!
+*/
+
 /// QUICK-START GUIDE
 /*
 	An assert-like macro valid for both compile-time and runtime assertions

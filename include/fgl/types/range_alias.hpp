@@ -58,6 +58,8 @@ size of array: 10
 #include <utility> // move
 #include <type_traits> // is_pointer_v, is_same_v
 
+#include "./traits.hpp"
+
 namespace fgl {
 
 // Range compatible wrapper for a T_begin iterator and T_end sentinel.
@@ -98,11 +100,9 @@ struct range_alias
 	{ return m_end; }
 };
 
-// Constructs a range_alias from a (non-void) pointer and element count.
-template <typename T>
-requires std::is_pointer_v<T> && (std::is_same_v<T, void*> == false)
+// Constructs a range_alias from a non-void pointer and element count.
 [[nodiscard]] constexpr auto make_range(
-	const T pointer,
+	const fgl::traits::pointer_to_non_void auto pointer,
 	const std::size_t elements) noexcept
 {
 	return range_alias(pointer, pointer + elements);
