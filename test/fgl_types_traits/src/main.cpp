@@ -12,17 +12,42 @@
 consteval bool test_byte_type()
 {
 	using fgl::traits::byte_type;
-
 	static_assert(byte_type<std::byte>);
 	static_assert(byte_type<char>);
 	static_assert(byte_type<unsigned char>);
-
+	static_assert(byte_type<const std::byte>);
+	static_assert(byte_type<const char>);
+	static_assert(byte_type<const unsigned char>);
+	static_assert(byte_type<const volatile std::byte>);
+	static_assert(byte_type<const volatile char>);
+	static_assert(byte_type<const volatile unsigned char>);
 	static_assert(!byte_type<void>);
 	static_assert(!byte_type<signed char>);
 	static_assert(!byte_type<int>);
 	static_assert(!byte_type<short>);
 	static_assert(!byte_type<double>);
+	return true;
+}
 
+consteval bool test_cbyte_type()
+{
+	using fgl::traits::cbyte_type;
+	static_assert(cbyte_type<std::byte>);
+	static_assert(cbyte_type<char>);
+	static_assert(cbyte_type<unsigned char>);
+	static_assert(cbyte_type<const std::byte>);
+	static_assert(cbyte_type<const char>);
+	static_assert(cbyte_type<const unsigned char>);
+	static_assert(cbyte_type<const volatile std::byte>);
+	static_assert(cbyte_type<const volatile char>);
+	static_assert(cbyte_type<const volatile unsigned char>);
+	static_assert(cbyte_type<void>);
+	static_assert(cbyte_type<const void>);
+	static_assert(cbyte_type<const volatile void>);
+	static_assert(!cbyte_type<signed char>);
+	static_assert(!cbyte_type<int>);
+	static_assert(!cbyte_type<short>);
+	static_assert(!cbyte_type<double>);
 	return true;
 }
 
@@ -205,6 +230,7 @@ consteval bool test_pointer_traits()
 	static_assert(test_remove_cvptr_t());
 	static_assert(test_remove_all_pointers());
 	static_assert(test_pointer_to_byte());
+	static_assert(test_cbyte_type());
 	return true;
 }
 

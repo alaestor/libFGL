@@ -4,59 +4,47 @@
 
 /*
 	Trying to figure out why constexpr_assert is not defined?
-	Make sure to define #FGL_SHORT_MACROS before including any libFGL headers!
+	Make sure FGL_SHORT_MACROS or FGL_DEBUG_CONSTEXPR_ASSERT_SHORT_MACROS is
+	defined before including any libFGL headers!
 */
 
 /// QUICK-START GUIDE
 /*
-	An assert-like macro valid for both compile-time and runtime assertions
+	An assert-like macro with well-defined behavior for compile-time
+	(`constexpr` / `consteval`) evaluation.
 
-	FGL_DEBUG_CONSTEXPR_ASSERT( boolean expression );
+	FGL_DEBUG_CONSTEXPR_ASSERT(1 + 1 == 2);
+	FGL_DEBUG_CONSTEXPR_ASSERT(1 + 1 == 3); // FATAL ERROR
 
-	To get the short version, define: FGL_SHORT_MACROS (global FGL macro)
-	or specific to this file: FGL_DEBUG_CONSTEXPR_ASSERT_SHORT_MACROS
+	with #define FGL_DEBUG_CONSTEXPR_ASSERT_SHORT_MACROS or FGL_SHORT_MACROS
 
-	constexpr_assert( boolean expression  );
-
-	To disable all assertions, define NDEBUG above this include.
+	constexpr_assert(2 + 2 == 4);
+	constexpr_assert(2 + 2 == 5); // FATAL ERROR
 */
 ///EXAMPLE PROGRAM
 /*
-	#define FGL_SHORT_MACROS
+	// define enables the short "constexpr_assert"
+	// could also use #define FGL_SHORT_MACROS
+	#define FGL_DEBUG_CONSTEXPR_ASSERT_SHORT_MACROS
 	#include <fgl/debug/constexpr_assert.hpp>
 
-	// can be executed at both compile-time and run-time
+	// add two integers and assert that the result is 2
 	constexpr int add_and_assert_two(int a, int b)
 	{
 		const int result{ a + b };
 		constexpr_assert(result == 2);
+		// without short macros, use:
+		// FGL_DEBUG_CONSTEXPR_ASSERT(result == 2);
 		return result;
 	}
 
 	int main()
 	{
-		constexpr int a{ add_and_assert_two(1, 1) }; // compile-time, OK
-		constexpr int b{ add_and_assert_two(5, 5) }; // compile-time, ERROR
-		int c{ add_and_assert_two(1, 1) }; // runtime, OK
-		int d{ add_and_assert_two(5, 5) }; // runtime, ERROR
+		constexpr int a{ add_and_assert_two(1, 1) }; // OK
+		constexpr int b{ add_and_assert_two(5, 5) }; // COMPILE-TIME ERROR
+		int c{ add_and_assert_two(1, 1) }; // OK
+		int d{ add_and_assert_two(5, 5) }; // RUNTIME ERROR (via assert)
 	}
-*/
-/// README (the long version)
-/*
-	`FGL_DEBUG_CONSTEXPR_ASSERT()` / `constexpr_assert()` are macros similar to
-	assert. The boolean condition doesn't need to be a constant expression. If
-	the statement executes at runtime then the regular C `assert` will be used.
-	If the statement executes at compile-time and the assertion is false,
-	the `constexpr_assert` will throw causing an error; compilation will fail.
-
-	This header guarentees not redefine any existing macros (will #error)
-
-	To disable all `constexpr_assert` macros, define NDEBUG above this include.
-
-	To use short macros, define FGL_DEBUG_CONSTEXPR_ASSERT_SHORT_MACROS
-		above this include. Short macros (`constexpr_assert`) are opt-in to
-		avoid collisions. The long names are prefixed with "FGL_DEBUG_".
-		Alternatively, define FGL_SHORT_MACROS (effects all FGL header macros).
 */
 
 #include <type_traits> // is_constant_evaluated
@@ -102,7 +90,7 @@
 
 	#ifndef FGL_DEBUG_CONSTEXPR_ASSERT
 ///////////////////////////////////////////////////////////////////////////////
-    	#define FGL_DEBUG_CONSTEXPR_ASSERT(assertion)
+		#define FGL_DEBUG_CONSTEXPR_ASSERT(assertion)
 ///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FGL_DEBUG_CONSTEXPR_ASSERT already defined

@@ -9,53 +9,118 @@
 
 /* FGL Constrained Range Concepts
 
-At the time of writing, concepts cannot be passed as template arguments.
-This isn't a one-size-fits-all solution; trying to reduce boilerplate noise.
+Concepts that allow for constraining ranges based on value or reference type
+without excessive `template` & `requires` boiler-plate noise.
 
-Generated concept names concantinates range and reference type constraints
+FGL range constraints are conjunctions between a range concept and a type
+concept which constrains either the `std::ranges::range_value_t` or
+`std::ranges::range_reference_t`, depending on which is most applicable
+to the concept.
 
-	`range_same_as<T>` combines `std::ranges::range` and `std::same_as`
+Generated concept signatures:
 
-	`contiguous_range_convertible_from<T>` combines
-		`std::ranges::contiguous_range` and `std::convertible_from`
+template <T_range> concept
+fgl::(RANGE CONCEPT NAME)_(TYPE CONCEPT NAME);
 
-Range concepts:
-	range
-	borrowed_range
-	sized_range
-	forward_range
-	bidirectional_range
-	random_access_range
-	contiguous_range
-	common_range
-	viewable_range
+template <T_range, T_compare> concept
+fgl::(RANGE CONCEPT NAME)_(TYPE CONCEPT NAME);
 
-Reference type concepts: (required with std::ranges::range_reference_t)
-	same_as
-	derived_from
-	convertible_to
-	common_with
-	assignable_from
-	swappable_with
+template <T_range, T_compare_range> concept
+fgl::(RANGE CONCEPT NAME)_(TYPE CONCEPT NAME)_range;
 
-Value type concepts: (required with std::ranges::range_value_t)
-	integral
-	signed_integral
-	unsigned_integral
-	floating_point
+**Range concepts**
 
-libFGL value type concepts: (required with std::ranges::range_value_t)
-	not_same_as
-	byte_type
-	numeric_type
-	pointer_to_byte
-	pointer_to_non_void
+- std::ranges::`range`
+- std::ranges::`borrowed_range`
+- std::ranges::`sized_range`
+- std::ranges::`bidirectional_range`
+- std::ranges::`random_access_range`
+- std::ranges::`contiguous_range`
+- std::ranges::`common_range`
+- std::ranges::`viewable_range`
 
-Combine a range concept and type concept:
-	bidirectional_range_derived_from<T>
-	viewable_range_integral
-	forward_range_swappable_with<T>
-	etc.
+**Type concepts**
+
+- std::`swappable_with<T&>`
+- std::`assignable_from<T>`
+- std::`same_as<T>`
+- std::`derived_from<T>`
+- std::`convertible_to<T>`
+- std::`common_with<T>`
+- std::`integral`
+- std::`signed_integral`
+- std::`unsigned_integral`
+- std::`floating_point`
+- fgl::traits::`not_same_as<T>`
+- fgl::traits::`numeric_type`
+- fgl::traits::`byte_type`
+- fgl::traits::`pointer_to_byte`
+- fgl::traits::`pointer_to_non_void`
+
+**Type concepts and the `_range` suffix**
+
+There are two categories of type constraints: "checks" that only take the
+range template argument (i.e. `template <T_range>` like `..._integral`) and
+"comparisons" which take an additional comparison type argument
+(i.e. `template <T_range, T_compare>` like `..._same_as`).
+
+Each comparison concept also has a variant with the `_range` suffix, whose
+template arguments are `<T_range, T_compare_range>`. This variant will
+retrieve the constraint type from `T_compare_range`'s value or reference
+type; which ever is used to retrieve the type being constrained from `T_range`.
+*/
+/// Example program
+/*
+#include <iostream>
+#include <utility> // swap
+#include <ranges> // begin, end
+#include <vector>
+#include <array>
+
+#include <fgl/types/range_constraints.hpp>
+
+void simple_range_swap(
+	std::ranges::range auto& r1,
+	fgl::range_swappable_with_range<decltype(r1)> auto& r2)
+{
+	auto r1_iter{ std::ranges::begin(r1) };
+	const auto r1_end{ std::ranges::end(r1) };
+	auto r2_iter{ std::ranges::begin(r2) };
+	const auto r2_end{ std::ranges::end(r2) };
+
+	while (r1_iter != r1_end && r2_iter != r2_end)
+		std::iter_swap(r1_iter++, r2_iter++);
+}
+
+void print_contiguous_int_range(
+	const auto& prefix,
+	const fgl::contiguous_range_same_as<int> auto& range)
+{
+	std::cout << prefix;
+	for (const int v : range)
+		std::cout << v << ' ';
+	std::cout << '\n';
+}
+
+int main()
+{
+	std::vector a{ 1,2,3,4,5,6,7 };
+	std::array b{ 7,6,5,4,3,2,1 };
+	print_contiguous_int_range("a: ", a);
+	print_contiguous_int_range("b: ", b);
+	std::cout << "swap...\n";
+	simple_range_swap(a, b);
+	print_contiguous_int_range("a: ", a);
+	print_contiguous_int_range("b: ", b);
+}
+*/
+/// Example program output
+/*
+a: 1 2 3 4 5 6 7
+b: 7 6 5 4 3 2 1
+swap...
+a: 7 6 5 4 3 2 1
+b: 1 2 3 4 5 6 7
 */
 
 #ifndef FGL_INTERNAL_CR_COMPARE
@@ -63,7 +128,10 @@ Combine a range concept and type concept:
 	#define FGL_INTERNAL_CR_COMPARE(ns1, t1, ns2, t2, ns3, t3)\
 		template <class T_range, class T_compare>\
 		concept t1 ## _ ## t2 = ns1::t1<T_range>\
-			&& ns2::t2<ns3::t3<T_range>, T_compare>;
+			&& ns2::t2<ns3::t3<T_range>, T_compare>;\
+		template <class T_range, class T_compare_range>\
+		concept t1 ## _ ## t2 ## _range = ns1::t1<T_range>\
+			&& ns2::t2<ns3::t3<T_range>, ns3::t3<T_compare_range>>;
 ///////////////////////////////////////////////////////////////////////////////
 #else
 	#error FGL_INTERNAL_CR_COMPARE already defined
@@ -87,7 +155,6 @@ Combine a range concept and type concept:
 #else
 	#error FGL_INTERNAL_CR_COMPARE_R already defined
 #endif
-
 #ifndef FGL_INTERNAL_CR_CHECK
 ///////////////////////////////////////////////////////////////////////////////
 	#define FGL_INTERNAL_CR_CHECK(ns1, t1, ns2, t2, ns3, t3)\

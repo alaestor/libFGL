@@ -59,6 +59,7 @@
 hi
 */
 
+#include <cassert>
 #include <ranges> // contiguous_range
 #include <string> // string, to_string
 #include <stdexcept> // runtime_error
@@ -66,6 +67,7 @@ hi
 #include <filesystem>
 #include <fstream>
 #include <optional>
+#include <limits>
 
 #include "../types/traits.hpp" // byte_type
 #include "../types/range_constraints.hpp" // contiguous_range_byte_type
@@ -103,6 +105,10 @@ void read_binary_file(
 	const std::size_t read_size{
 		(bytes_to_read > 0) ? bytes_to_read : get_file_size(file_path)
 	};
+	assert(
+		read_size
+		< static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())
+	);
 	if (buffer_size >= read_size)
 	{
 		if (std::ifstream ifs(file_path, std::ios::binary);
@@ -136,15 +142,15 @@ std::vector<T> read_binary_file(const std::filesystem::path& file_path)
 }
 
 /*Best effort. No information about the error will be provided.
-If known_file_size is `0`, the file size will be obtained from std::filesystem.
+If bytes_to_read is `0`, the file size will be obtained from std::filesystem.
 The size of the output range must be >= the size of the file.*/
 bool read_binary_file_noexcept(
 	const std::filesystem::path& file_path,
 	fgl::contiguous_range_byte_type auto& output,
-	const std::size_t known_file_size = 0)
+	const std::size_t bytes_to_read = 0)
 noexcept try
 {
-	read_binary_file(file_path, output, known_file_size);
+	read_binary_file(file_path, output, bytes_to_read);
 	return true;
 }
 catch (...) { return false; }
@@ -159,25 +165,26 @@ noexcept try
 }
 catch (...) { return std::nullopt; }
 
-/*Throws on failure.
-If length is `0`, the size of the input range will be used*/
+// Write `bytes_to_write` bytes from `input` to `file_path`. Throws on failure.
 void write_binary_file(
 	const std::filesystem::path& file_path,
 	const fgl::contiguous_range_byte_type auto& input,
-	const std::size_t length = 0,
+	const std::size_t bytes_to_write,
 	const std::ios::openmode mode = std::ios::trunc)
 {
-	const std::streamsize number_of_bytes_to_write{
-		(length > 0) ? static_cast<std::streamsize>(length)
-		: static_cast<std::streamsize>(std::ranges::size(input))
-	};
+	assert(
+		bytes_to_write
+		< static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max())
+	);
+	assert(bytes_to_write <= std::ranges::size(input));
+
 	if (std::ofstream ofs(file_path, std::ios::binary | mode);
 		ofs)
 	{
 		ofs.exceptions(std::ios::badbit | std::ios::failbit);
 		ofs.write(
 			reinterpret_cast<const char*>(std::ranges::cdata(input)),
-			number_of_bytes_to_write
+			static_cast<std::streamsize>(bytes_to_write)
 		);
 	}
 	else throw std::runtime_error(
@@ -185,19 +192,43 @@ void write_binary_file(
 	);
 }
 
-/*Best effort. No information about the error will be provided.
-If length is `0`, the size of the input range will be used.*/
+/*Write `bytes_to_write` bytes from `input` to `file_path`.
+Best effort. Returns `true` on success, `false` on failure.
+No information about the error will be provided.*/
 bool write_binary_file_noexcept(
 	const std::filesystem::path& file_path,
 	const fgl::contiguous_range_byte_type auto& input,
-	const std::size_t length = 0,
+	const std::size_t bytes_to_write,
 	const std::ios::openmode mode = std::ios::trunc)
 noexcept try
 {
-	write_binary_file(file_path, input, length, mode);
+	write_binary_file(file_path, input, bytes_to_write, mode);
 	return true;
 }
 catch (...) { return false; }
+
+// Write `input` to `file_path`. Throws on failure.
+void write_binary_file(
+	const std::filesystem::path& file_path,
+	const fgl::contiguous_range_byte_type auto& input,
+	const std::ios::openmode mode = std::ios::trunc)
+{
+	write_binary_file(file_path, input, std::ranges::size(input), mode);
+}
+
+/*Write `input` to `file_path`.
+Best effort. Returns `true` on success, `false` on failure.
+No information about the error will be provided.*/
+bool write_binary_file_noexcept(
+	const std::filesystem::path& file_path,
+	const fgl::contiguous_range_byte_type auto& input,
+	const std::ios::openmode mode = std::ios::trunc)
+noexcept
+{
+	return write_binary_file_noexcept(
+		file_path, input, std::ranges::size(input), mode
+	);
+}
 
 }// namespace fgl
 

@@ -5,10 +5,10 @@
 /// QUICK-START GUIDE
 /* Syntax: required [optional]
 
-    fgl::random<[type], [distribution], [generator], [table size]>
-        my_rng([min value], [max value], [seed]);
+	fgl::random<[type], [distribution], [generator], [table size]>
+		my_rng([min value], [max value], [seed]);
 
-    type var = my_rng(); // returns `type` between `min` and `max` (inclusive)
+	type var = my_rng(); // returns `type` between `min` and `max` (inclusive)
 
 	template:
 	`type` numeric datatype. supports floating-point. [default: uint_fast64_t]

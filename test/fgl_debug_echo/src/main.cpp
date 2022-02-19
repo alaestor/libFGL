@@ -24,11 +24,11 @@ std::string fixme_fmt_out(
 }
 
 std::string fixme_fmt(
-	const fgl::debug::output::channel_e channel,
+	const fgl::debug::output::priority_e channel,
 	const std::string_view message,
 	const std::source_location source)
 {
-	assert(channel == fgl::debug::output::channel_e::echo);
+	assert(channel == fgl::debug::output::priority_e::echo);
 	return fixme_fmt_out(
 		source.line(),
 		source.file_name(),
@@ -50,7 +50,7 @@ std::string sfmt(
 	const std::string_view message = "",
 	const std::source_location source = std::source_location::current())
 {
-	return fixme_fmt(fgl::debug::output::channel_e::echo, message, source);
+	return fixme_fmt(fgl::debug::output::priority_e::echo, message, source);
 }
 
 std::string result(const auto v)

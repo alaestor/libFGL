@@ -7,12 +7,17 @@
 #include <ranges>
 #include <algorithm>
 
+#define FGL_SHORT_MACROS
+#include <fgl/debug/constexpr_assert.hpp>
+
 #include <fgl/types/range_alias.hpp>
 #include <fgl/utility/zip.hpp>
 
-#define FGL_SHORT_MACROS
-#include <fgl/debug/constexpr_assert.hpp>
 #include <fgl/types/traits.hpp>
+
+#ifdef NDEBUG
+	#error NDEBUG must not be defined for tests because they rely on assertions
+#endif // NDEBUG
 
 using fgl::traits::is_const_ref, fgl::traits::is_nonconst_ref;
 

@@ -47,7 +47,7 @@ template <class T, typename T_GUID = decltype([](){})>
 struct unique
 {
 	using id = T_GUID;
-    T object;
+	T object;
 
 	[[nodiscard]] explicit constexpr
 	unique(auto&& ... args)
@@ -57,11 +57,11 @@ struct unique
 	[[nodiscard]] constexpr operator T() const noexcept
 	{ return object; }
 
-    [[nodiscard]] constexpr T& operator()() noexcept
-    { return object; }
+	[[nodiscard]] constexpr T& operator()() noexcept
+	{ return object; }
 
-    [[nodiscard]] constexpr const T& operator()() const noexcept
-    { return object; }
+	[[nodiscard]] constexpr const T& operator()() const noexcept
+	{ return object; }
 };
 
 } // namespace fgl

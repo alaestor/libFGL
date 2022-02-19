@@ -3,17 +3,18 @@
 
 #define FGL_SHORT_MACROS
 #include <fgl/debug/constexpr_assert.hpp>
+
 #include <fgl/types/traits.hpp>
 
 #include <fgl/utility/enumerate.hpp>
 
-#ifdef NDEBUG
-	#error NDEBUG must not be defined for tests because they rely on assertions
-#endif // NDEBUG
-
 #include <ranges> // forward_range
 
 #include <iostream>
+
+#ifdef NDEBUG
+	#error NDEBUG must not be defined for tests because they rely on assertions
+#endif // NDEBUG
 
 int main()
 {

@@ -2,11 +2,11 @@
 #include <ranges>
 #include <concepts>
 
-#include <fgl/types/range_alias.hpp>
-
 #define FGL_SHORT_MACROS
 #include <fgl/debug/constexpr_assert.hpp>
 #include <fgl/types/traits.hpp> // is_nonconst_ref
+
+#include <fgl/types/range_alias.hpp>
 
 #ifdef NDEBUG
 	#error NDEBUG must not be defined for tests because they rely on assertions

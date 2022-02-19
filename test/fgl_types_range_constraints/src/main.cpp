@@ -8,10 +8,6 @@
 // testing
 #include <fgl/types/range_constraints.hpp>
 
-#ifdef NDEBUG
-	#error NDEBUG must not be defined for tests because they rely on assertions
-#endif // NDEBUG
-
 #include <cstddef> // byte
 #include <vector>
 #include <list>
@@ -54,6 +50,9 @@ TEST_CR_PERMUTATIONS(contiguous_range);
 TEST_CR_PERMUTATIONS(common_range);
 TEST_CR_PERMUTATIONS(viewable_range);
 
+#ifdef NDEBUG
+	#error NDEBUG must not be defined for tests because they rely on assertions
+#endif // NDEBUG
 
 using namespace fgl;
 using std::list, std::vector, std::byte;

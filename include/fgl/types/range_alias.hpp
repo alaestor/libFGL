@@ -4,15 +4,14 @@
 
 /// QUICK-START GUIDE
 /*
-    const fgl::range_alias my_range(begin_iter, end_sentinel);
-	// or
-	const auto my_range{ make_range(raw_ptr, length) };
+	fgl::range_alias r1(begin_iter, end_sentinel);
+	fgl::range_alias r2{ fgl::make_range(begin_iter, length) };
+	for (const auto v& : r1) // ...
 
-	for (const auto& v : my_range) ...
-
-	fgl::range_alias can be used to easily create modern and safe C++ ranges
-	from raw pointers, or other iterators. The helper function make_range()
-	makes it easy to create a range from a C-style pointer and length.
+	`fgl::range_alias` can be used to easily create modern and safe C++ ranges
+	from raw pointers or other iterators. The helper factory function
+	`make_range(iter, elements)` makes it easy to create a range from a
+	C-style "range" (a pointer and length pair).
 */
 /// EXAMPLE PROGRAM
 /*
@@ -30,10 +29,8 @@
 		const std::unique_ptr<int[]> memory_owner(new int[length]);
 		int* const ptr{ memory_owner.get() }; // raw ptr for readability
 
-		// can be used to make a safe and modern interface
+		// manual construction
 		const fgl::range_alias range1(ptr, ptr+length);
-
-		const auto range2{ fgl::make_range(ptr, length) }; // helper factory
 
 		std::cout // can use in sized algorithms
 			<< "size of array: "
@@ -42,6 +39,9 @@
 
 		for (int i{ 0 }; auto& value : range1)
 			value = --i; // fill memory range
+
+		// construction via helper factory for "C-style ranges"
+		const auto range2{ fgl::make_range(ptr, length) };
 
 		for (const int i : range2)
 			std::cout << i << ' '; // print memory range

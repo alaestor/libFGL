@@ -24,16 +24,16 @@ pow(const T base, const T_exponent exponent)
 	else if (exponent == 1) return base;
 
 	T result{ 1 };
-    if (exponent < 0)
-    {
-        for (T_exponent i{ exponent }; i < 0; ++i)
-            result /= base;
-    }
-    else
-    {
-	    for (T_exponent i{ 0 }; i < exponent; ++i)
-		    result *= base;
-    }
+	if (exponent < 0)
+	{
+		for (T_exponent i{ exponent }; i < 0; ++i)
+			result /= base;
+	}
+	else
+	{
+		for (T_exponent i{ 0 }; i < exponent; ++i)
+			result *= base;
+	}
 	return result;
 }
 
@@ -90,8 +90,8 @@ double pow_approximation(double base, const double exponent)
 	{
 		// is this still the case? should test
 		// stolen comments from the code i adapted:
-		//      exponentiation by squaring with the exponent's integer part
-		//      double r = u.d makes everything much slower, not sure why
+		//	  exponentiation by squaring with the exponent's integer part
+		//	  double r = u.d makes everything much slower, not sure why
 		uint_fast32_t exp_i{ static_cast<uint_fast32_t>(exponent) };
 		intrep[1] = static_cast<half_t>(
 			(exponent - exp_i) * (intrep[1] - magic) + magic
@@ -119,17 +119,17 @@ double pow_approximation(double base, const double exponent)
 
 // std::cout
 // 	<< "\nNormal:"
-// 	<< "\n\t8.0  ^ 3    = " << std::pow(8.0, 3)
+// 	<< "\n\t8.0  ^ 3	= " << std::pow(8.0, 3)
 // 	<< "\n\t3.05 ^ 1.98 = " << std::pow(3.05, 1.98);
 
 // std::cout
 // 	<< "\nFast, inaccurate:"
-// 	<< "\n\t8.0  ^ 3    = " << pow_approximation<false>(8.0, 3.0)
+// 	<< "\n\t8.0  ^ 3	= " << pow_approximation<false>(8.0, 3.0)
 // 	<< "\n\t3.05 ^ 1.98 = " << pow_approximation<false>(3.05, 1.98);
 
 // std::cout
 // 	<< "\nFast, more accurate:"
-// 	<< "\n\t8.0  ^ 3    = " << pow_approximation<true>(8.0, 3.0)
+// 	<< "\n\t8.0  ^ 3	= " << pow_approximation<true>(8.0, 3.0)
 // 	<< "\n\t3.05 ^ 1.98 = " << pow_approximation<true>(3.05, 1.98);
 
 // std::cout << '\n' << std::endl;

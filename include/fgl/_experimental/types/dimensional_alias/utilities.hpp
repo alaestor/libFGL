@@ -61,8 +61,7 @@ template
 <
 	std::size_t T_dimensions = 0,
 	fgl::contiguous_range_integral T_bounds,
-	fgl::contiguous_range_assignable_from
-		<std::ranges::range_value_t<T_bounds>> T_offsets
+	fgl::contiguous_range_assignable_from_range<T_bounds> T_offsets
 >
 constexpr inline void calculate_offsets_major_column(
 	const T_bounds& bounds,
@@ -87,7 +86,7 @@ constexpr inline void calculate_offsets_major_column(
 // helper function: constructs, fills, and then returns a std::array of offsets
 template <std::size_t T_dimensions, typename T_out = std::size_t>
 constexpr inline std::array<T_out, T_dimensions> make_offsets_major_column(
-    const fgl::contiguous_range_integral auto& bounds)
+	const fgl::contiguous_range_integral auto& bounds)
 {
 	std::array<T_out, T_dimensions> out;
 	calculate_offsets_major_column<T_dimensions>(bounds, out);
@@ -99,33 +98,32 @@ template
 <
 	std::size_t T_dimensions = 0,
 	fgl::contiguous_range_integral T_bounds,
-	fgl::contiguous_range_assignable_from
-		<std::ranges::range_value_t<T_bounds>> T_offsets
+	fgl::contiguous_range_assignable_from_range<T_bounds> T_offsets
 >
 constexpr inline void calculate_offsets_major_row(
 	const T_bounds& bounds,
 	T_offsets& out_offsets)
 {
-    const std::size_t dimensions{
-        assert_dimensions<T_dimensions>(bounds, out_offsets)
-    };
-    // TODO use fgl::enumerate with a reverse adapter?
+	const std::size_t dimensions{
+		assert_dimensions<T_dimensions>(bounds, out_offsets)
+	};
+	// TODO use fgl::enumerate with a reverse adapter?
 	using out_t = std::ranges::range_value_t<T_bounds>;
-    for (std::size_t r{ dimensions-1 }, i{ 0 }; i < dimensions; ++i, --r)
-    {
-        out_offsets[r] = std::reduce(
-            &bounds[0],
-            &bounds[i],
-            out_t{ 1 },
-            std::multiplies<out_t>()
-        );
-    }
+	for (std::size_t r{ dimensions-1 }, i{ 0 }; i < dimensions; ++i, --r)
+	{
+		out_offsets[r] = std::reduce(
+			&bounds[0],
+			&bounds[i],
+			out_t{ 1 },
+			std::multiplies<out_t>()
+		);
+	}
 }
 
 // helper function: constructs, fills, and then returns a std::array of offsets
 template <std::size_t T_dimensions, typename T_out = std::size_t>
 constexpr inline std::array<T_out, T_dimensions> make_offsets_major_row(
-    const fgl::contiguous_range_integral auto& bounds)
+	const fgl::contiguous_range_integral auto& bounds)
 {
 	std::array<T_out, T_dimensions> out;
 	calculate_offsets_major_row<T_dimensions>(bounds, out);
@@ -140,8 +138,8 @@ constexpr inline bool out_of_bounds(
 noexcept
 {
 	const std::size_t dimensions{
-        assert_dimensions<T_dimensions>(indexes, bounds)
-    };
+		assert_dimensions<T_dimensions>(indexes, bounds)
+	};
 	for(const auto& [index, bound] : fgl::czip(dimensions, indexes, bounds))
 	{
 		if (index >= bound)

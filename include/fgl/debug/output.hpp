@@ -4,24 +4,27 @@
 
 /// QUICK-START GUIDE / EXAMPLE PROGRAM
 /*
-	#include <iostream>
-
-	// this usually wouldn't be used on it's own;
-	// it's meant to direct the output stream of fgl::debug tools
 	#include <fgl/debug/output.hpp>
 
 	int main()
 	{
-		// redirect global debug output to cerr instead of cout (default)
-		fgl::debug::output::config::instance().change_output_stream(std::cerr);
+		// make a reference to the output configuration singleton
+		auto& config{ fgl::debug::output::config::instance() };
 
-		// example of something sending input to the stream
-		fgl::debug::output::config::instance().output_stream() << "derp";
+		// redirect libFGL debug output to std::cerr
+		config.change_output_stream(std::cerr);
 
 		// only output warnings and above
-		fgl::debug::output::config::output_threshold =
-			fgl::debug::output::warn;
+		using priority = fgl::debug::output::priority_e;
+		config.change_output_threshold(priority::warn);
+
+		// send something to the output stream
+		config.output_stream() << "Hello, world!" << std::endl;
 	}
+*/
+/// EXAMPLE OUTPUT
+/*
+Hello, world!
 */
 
 #include <cassert>
@@ -38,10 +41,11 @@
 
 namespace fgl::debug::output {
 
-// user-defined channels beyond MAX are supported: "custom" channels
-enum channel_e : uint_fast8_t
+// user-defined channels priorities MAX are supported: "custom" channels
+enum priority_e : uint_fast8_t
 {
-	echo = 0,
+	ALL = 0,
+	echo,
 	fixme,
 	debug,
 	info,
@@ -51,7 +55,7 @@ enum channel_e : uint_fast8_t
 };
 
 /// CAUTION : this will become a constexpr string in future versions
-static constexpr std::array<fgl::cstring, channel_e::MAX> channel_strings
+static constexpr std::array<fgl::cstring, priority_e::MAX> priority_strings
 {
 	"ECHO",
 	"FIXME",
@@ -65,24 +69,34 @@ namespace internal {
 class config final
 {
 	FGL_SINGLETON_BOILERPLATE(config);
-public:
-	channel_e output_threshold{ channel_e::MAX };
 
-	[[nodiscard]] bool channel_is_enabled(const channel_e channel)
+	priority_e m_priority_threshold{ priority_e::MAX };
+	std::ostream* m_output_stream{ &std::cout };
+public:
+
+	[[nodiscard]] priority_e priority_threshold() const noexcept
+	{ return m_priority_threshold; }
+
+	void change_priority_threshold(const priority_e priority) noexcept
+	{ m_priority_threshold = priority; }
+
+	[[nodiscard]] bool above_priority_threshold(const priority_e priority)
 	const noexcept
 	{
-		return output_threshold >= channel;
+		return m_priority_threshold >= priority;
 	}
 
 	static std::string default_formatter(
-		const channel_e channel,
+		const priority_e priority,
 		const std::string_view message,
 		const std::source_location source)
 	{ // TODO this can be constexpr when std::string::operator+ is implemented?
 		std::stringstream ss;
 		ss
 			<< '['
-			<< (channel < channel_e::MAX ? channel_strings[channel] : "CUSTOM")
+			<< (priority < priority_e::MAX
+				? priority_strings[priority]
+				: "CUSTOM")
 			<< ']'
 			<< " file:" << source.file_name()
 			<< '(' << source.line() << ':' << source.column() << ") '"
@@ -102,9 +116,6 @@ public:
 
 	[[nodiscard]] std::ostream& output_stream() const
 	{ return *m_output_stream; }
-
-private:
-	std::ostream* m_output_stream{ &std::cout };
 };
 }// namespace internal
 

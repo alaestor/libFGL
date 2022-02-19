@@ -4,13 +4,23 @@
 
 /// QUICK-START GUIDE
 /*
-    for (const auto& [a, b] : zip(a_vec, b_arr))
+	for (const auto& [a, b] : zip(a_vec, b_arr))
 		a += b; // mutable references like *begin()
 
-	use fgl::czip for const references like *cbegin()
+	int sum{ 0 };
+	for (const auto& [a, b] : czip(a_vec, b_arr))
+		sum += a + b; // const references like *cbegin()
 
-	Returns a range iterating multiple ranges of differing types.
-	Iterates based on the smallest range size.
+	// explicit length so it doesn't need to check each range
+	for (const auto& [a, b, c]
+		: czip(shortest_range.size(), shortest_range, longer, longer))
+
+	An interface to easily create a range which iterates multiple ranges of
+	different types at once. The range is composed of an FGL internal zip
+	iterator and a length-based end sentinel. Dereferencing the iterator
+	returns a tuple of references or values from the zipped ranges' iterators,
+	in the order the ranges were passed to `fgl::zip`. In the case of
+	`fgl::czip`, they are `const`-qualified references.
 */
 /// EXAMPLE PROGRAM
 /*
@@ -37,15 +47,15 @@ int main()
 	constexpr auto result{ calc() };
 	std::cout << result << std::endl;
 
-    std::vector<float> vec(20, 3.14f);
-    std::map<int, float> map{ {1, 1.1f}, {2, 2.2f}, {3, 3.3f} };
-    for (const auto& [v1, m, v2] : fgl::zip(vec, map, vec))
-    {
-        const auto& [m_k, m_v]{ m }; // cant nest structured bindings
-        std::cout<< v1 << " += " << m_k << " + " << m_v << " = ";
-        v1 += m_k + m_v;
-        std::cout << v2 << '\n'; // same element as v1
-    }
+	std::vector<float> vec(20, 3.14f);
+	std::map<int, float> map{ {1, 1.1f}, {2, 2.2f}, {3, 3.3f} };
+	for (const auto& [v1, m, v2] : fgl::zip(vec, map, vec))
+	{
+		const auto& [m_k, m_v]{ m }; // cant nest structured bindings
+		std::cout<< v1 << " += " << m_k << " + " << m_v << " = ";
+		v1 += m_k + m_v;
+		std::cout << v2 << '\n'; // same element as v1
+	}
 }
 */
 /// EXAMPLE OUTPUT
@@ -62,6 +72,7 @@ int main()
 #include <tuple>
 
 #include "../types/range_alias.hpp"
+#include "../debug/constexpr_assert.hpp"
 
 namespace fgl {
 
@@ -172,13 +183,17 @@ zip_sentinel_t shortest(const std::integral auto& ... lengths)
 /// fgl::zip public interface
 // should these even bother forwarding?
 
-/*Returns a range iterating multiple ranges of differing types.
+/*Returns a range which iterates over multiple ranges of different types.
 The zip range's sentinel is determined by the `length` parameter, which is
 converted to a signed integral (zip_sentinel_t) via static_cast.
 Example usage: `for (const auto& [va,vb,vc] : zip(a.size(), a, b, c))`*/
 template <std::ranges::forward_range ... T_ranges>
 constexpr auto zip(const std::integral auto length, T_ranges&& ... args)
 {
+	FGL_DEBUG_CONSTEXPR_ASSERT(
+		static_cast<zip_sentinel_t>(length)
+		<= internal::shortest(std::ranges::ssize(args)...)
+	);
 	using fgl::internal::forward_zip_iterator;
 	return fgl::range_alias(
 		forward_zip_iterator(std::begin(std::forward<T_ranges>(args))...),
@@ -186,7 +201,7 @@ constexpr auto zip(const std::integral auto length, T_ranges&& ... args)
 	);
 }
 
-/*Returns a range iterating multiple ranges of differing types.
+/*Returns a range which iterates over multiple ranges of different types.
 The zip range's sentinel is determined by the smallest range.
 Example usage: `for (const auto& [va,vb,vc] : zip(a, b, c))`*/
 template <std::ranges::forward_range ... T_ranges>
@@ -199,13 +214,17 @@ constexpr auto zip(T_ranges&& ... args)
 /// czip
 
 
-/*Returns a range iterating multiple const ranges of differing types.
+/*Returns a range which iterates over multiple const ranges of different types.
 The zip range's sentinel is determined by the `length` parameter, which is
 converted to a signed integral (zip_sentinel_t) via static_cast.
 Example usage: `for (const auto& [va,vb,vc] : zip(a.size(), a, b, c))`*/
 template <std::ranges::forward_range ... T_ranges>
 constexpr auto czip(const std::integral auto length, T_ranges&& ... args)
 {
+	FGL_DEBUG_CONSTEXPR_ASSERT(
+		static_cast<zip_sentinel_t>(length)
+		<= internal::shortest(std::ranges::ssize(args)...)
+	);
 	using fgl::internal::forward_zip_iterator;
 	return fgl::range_alias(
 		forward_zip_iterator(std::cbegin(std::forward<T_ranges>(args))...),
@@ -213,8 +232,8 @@ constexpr auto czip(const std::integral auto length, T_ranges&& ... args)
 	);
 }
 
-/*Returns a range iterating multiple const ranges of differing types.
-The zip range's sentinel is determined by the smallest range.
+/*Returns a range which iterates over multiple const ranges of different types.
+const iterators. The zip range's sentinel is determined by the smallest range.
 Example usage: `for (const auto& [va,vb,vc] : zip(a, b, c))`*/
 template <std::ranges::forward_range ... T_ranges>
 constexpr auto czip(T_ranges&& ... args)

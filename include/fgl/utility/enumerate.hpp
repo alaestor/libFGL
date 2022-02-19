@@ -9,14 +9,13 @@
 
 /// QUICK-START GUIDE
 /*
-    for (const auto& [i, v] : fgl::enumerate(a))
+	for (const auto& [i, v] : fgl::enumerate(a))
 		assert(&v == &a[i]); // mutable reference like *begin()
 
 	use fgl::cenumerate() for const references like *cbegin()
 
-	Returns an enumerated range iterating multiple ranges of differing types.
-	Enumerates a with an incrementing counter, from zero, of template type T.
-	Iterates based on the smallest range size. (uses fgl::zip / fgl::czip)
+	Returns an enumerated fgl::zip range where the first range of the
+	zip is an incrementing counter of integral type `T`.
 */
 /// EXAMPLE PROGRAM
 /*

@@ -4,10 +4,10 @@
 
 /// QUICK-START GUIDE
 /*
-    auto barray1 = fgl::make_byte_array( "a cstring literal" );
+	auto barray1 = fgl::make_byte_array( "a cstring literal" );
 
 	using namespace fgl::literals;
-    auto barray2 = "a cstring literal"_bytes;
+	auto barray2 = "a cstring literal"_bytes;
 
 	Creates a std::array of std::byte from cstring literal (excludes null term)
 */
@@ -67,13 +67,13 @@ template <std::size_t N>
 struct byte_array_literal_helper final
 {
 	using char_array_t = fgl::carray<char, N>;
-    char_array_t char_array{};
+	char_array_t char_array{};
 
 	[[nodiscard]] consteval
 	byte_array_literal_helper(const char_array_t& cstring_literal) noexcept
-    {
-        std::ranges::copy(cstring_literal, char_array);
-    }
+	{
+		std::ranges::copy(cstring_literal, char_array);
+	}
 };
 } // namespace internal
 
@@ -81,7 +81,7 @@ struct byte_array_literal_helper final
 template<internal::byte_array_literal_helper T_container>
 consteval auto operator"" _bytes()
 {
-    return make_byte_array(T_container.char_array);
+	return make_byte_array(T_container.char_array);
 }
 } // namespace fgl::literals
 

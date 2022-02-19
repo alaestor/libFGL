@@ -4,24 +4,29 @@
 
 /// QUICK-START GUIDE
 /*
+	A simple way to leave reminders, notes, code review tags,
+	and easily document things that are a work-in-progress.
+
 	FGL_DEBUG_FIX_ME; // simple output
 	FGL_DEBUG_FIX("a message"); // providing a message
 	FGL_DEBUG_FIX_THIS(expression); // message is code (will be executed)
 
-	For short macros, define FGL_SHORT_MACROS (for all libFGL headers)
-	or specific to this file: FGL_DEBUG_FIXME_SHORT_MACROS
+	with #define FGL_DEBUG_FIXME_SHORT_MACROS or FGL_SHORT_MACROS
 
 	FIX_ME;
 	FIX("a message");
-	FIX_THIS( code );
+	FIX_THIS(expression);
 
-	To disable all [FIXME] output, define NDEBUG above this include.
-	Or, set fgl::debug::output threshold to > fixme
+	To disable all [FIXME] output, define NDEBUG above this include,
+	or set fgl::debug::output::config threshold to be greater than fixme
 */
 /// EXAMPLE PROGRAM
 /*
 #include <iostream>
-#define FGL_SHORT_MACROS
+
+// define enables the short "FIX", "FIX_ME", and "FIX_THIS"
+// could also #define FGL_SHORT_MACROS
+#define FGL_DEBUG_FIXME_SHORT_MACROS
 #include <fgl/debug/fixme.hpp>
 
 int add(int a, int b)
@@ -31,9 +36,6 @@ int add(int a, int b)
 
 int main()
 {
-	// redirect global debug output to cerr instead of cout (default)
-	fgl::debug::output::config::instance().change_output_stream(std::cerr);
-
 	FIX_ME;
 	FIX_ME const int one{ 1};
 	const int two{ 2 }; FIX_ME
@@ -53,29 +55,9 @@ int main()
 [FIXME] file:src/main.cpp(20:3) 'int main()'
  \_____ the author is an idiot
 */
-/// README (the long version)
-/*
-	[FIXME] provides a simple macro interface to leave reminders, notes,
-	code review tags, and document things that are a work-in-progress.
 
-	FIX_ME; will output an empty [FIXME] message with location info.
-	FIX("message"); will output a message.
-	FIX_THIS(expression); will output the expression (not the result).
 
-	This header guarentees not redefine any existing macros (will #error)
 
-	To disable all [FIXME] output, define NDEBUG above this include.
-	Or, set fgl::debug::output threshold to > fixme (will also disable echo).
-
-	To use short macros, define FGL_DEBUG_FIXME_SHORT_MACROS above this include.
-		Short macros (`FIX`, `FIX_ME`, `FIX_THIS`) are opt-in to avoid
-		collisions. The long names are prefixed with "FGL_DEBUG_".
-		Alternatively, define FGL_SHORT_MACROS (affects all FGL header macros).
-
-	To change the output string format, implement a function and assign to
-		`fgl::debug::fixme::config::getInstance().formatter = my_formatter;`
-		The default is `fgl::debug::output::config::default_formatter`
-*/
 /// INTERNAL NOTES
 /* TODO -> future module overhaul
 	Will still need a .h for macros
@@ -181,7 +163,7 @@ public:
 		const std::source_location source
 			= std::source_location::current()) const
 	{
-		if (output::config::instance().channel_is_enabled(output::fixme))
+		if (output::config::instance().above_priority_threshold(output::fixme))
 		{
 			output::config::instance().output_stream()
 				<< m_formatter(output::fixme, message, source)
