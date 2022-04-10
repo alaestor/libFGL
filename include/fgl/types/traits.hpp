@@ -1,6 +1,7 @@
 #pragma once
 #ifndef FGL_TYPE_TRAITS_HPP_INCLUDED
 #define FGL_TYPE_TRAITS_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
 
 #include <cstddef> // byte
 #include <type_traits>
@@ -21,6 +22,9 @@ concept cbyte_type = byte_type<T> || std::same_as<std::remove_cv_t<T>, void>;
 
 template <typename T>
 concept numeric_type = std::integral<T> || std::floating_point<T>;
+
+template <typename T>
+concept pointer_type = std::is_pointer_v<T>;
 
 template <typename T1, typename T2>
 concept not_same_as = (std::same_as<T1, T2> == false);

@@ -4,10 +4,11 @@
 
 // should contain all `types/*.hpp`
 
-#include "./types/traits.hpp"
-#include "./types/ctypes.hpp"
 #include "./types/cbyte_ptr_wrapper.hpp"
+#include "./types/ctypes.hpp"
 #include "./types/range_alias.hpp"
 #include "./types/range_constraints.hpp"
+#include "./types/singleton.hpp"
+#include "./types/traits.hpp"
 
 #endif // FGL_TYPES_HPP_INCLUDED

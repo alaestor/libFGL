@@ -140,7 +140,7 @@ consteval bool expected_behavior()
 	return true;
 }
 
-consteval bool tests()
+consteval bool test_passes()
 {
 	static_assert(can_have_mixed_types());
 	static_assert(can_have_mixed_constness());

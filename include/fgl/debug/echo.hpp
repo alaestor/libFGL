@@ -1,6 +1,7 @@
 #pragma once
 #ifndef FGL_DEBUG_ECHO_HPP_INCLUDED
 #define FGL_DEBUG_ECHO_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
 
 /// QUICK-START GUIDE
 /*
@@ -16,7 +17,7 @@
 	ECHOV(x);
 
 	To disable all [ECHO] output, define NDEBUG above this include,
-	or set fgl::debug::output::config threshold to be greater than echo
+	or call fgl::debug::output_config<fgl::debug::echo>::turn_off();
 */
 /// EXAMPLE PROGRAM
 /*
@@ -65,9 +66,9 @@ int main()
 */
 
 #include <string_view>
+#include <sstream>
 #include <source_location>
 
-#include "../types/singleton.hpp"
 #include "../debug/output.hpp"
 
 #ifdef FGL_SHORT_MACROS
@@ -81,7 +82,7 @@ int main()
 	#ifndef FGL_DEBUG_ECHO
 ///////////////////////////////////////////////////////////////////////////////
 		#define FGL_DEBUG_ECHO(message) \
-			fgl::debug::echo::config::instance().emit_echo(message);
+			fgl::debug::output_config<fgl::debug::echo>::emit(message);
 ///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FGL_DEBUG_ECHO already defined
@@ -91,7 +92,7 @@ int main()
 		#ifndef FGL_DEBUG_ECHOV_IMPL
 ///////////////////////////////////////////////////////////////////////////////
 			#define FGL_DEBUG_ECHOV_IMPL(expr) \
-				fgl::debug::echo::config::instance().emit_echo(expr, #expr);
+				fgl::debug::output_config<fgl::debug::echo>::emit(expr, #expr);
 ///////////////////////////////////////////////////////////////////////////////
 		#else
 			#error FGL_DEBUG_ECHOV_IMPL already defined
@@ -118,7 +119,7 @@ int main()
 
 	#ifndef ECHOV
 ///////////////////////////////////////////////////////////////////////////////
-		#define ECHOV(expr) FGL_DEBUG_ECHOV_IMPL(expr)
+		#define ECHOV(expr) FGL_DEBUG_ECHOV(expr)
 ///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error ECHOV already defined (FGL_DEBUG_ECHO_SHORT_MACROS)
@@ -126,55 +127,77 @@ int main()
 
 #endif // ifdef FGL_DEBUG_ECHO_SHORT_MACROS
 
-namespace fgl::debug::echo {
+namespace fgl::debug {
 
-using echo_formatter_t = output::default_formatter_t;
-
-namespace internal {
-class config final
+class echo final
 {
-	FGL_SINGLETON_BOILERPLATE(config);
-public:
-	const echo_formatter_t& formatter{ m_formatter };
+	public:
+	echo(auto&&...) = delete;
+	~echo() = delete;
+};
 
-	void change_formatter(const echo_formatter_t& custom_formatter) noexcept
-	{ m_formatter = custom_formatter; }
+template <>
+class output_config<echo> final
+{
+	static inline bool m_enabled{ true };
+	public:
+	output_config(auto&&...) = delete;
+	~output_config() = delete;
 
-	void emit_echo(
-		const std::string_view message,
-		const std::source_location source
-			= std::source_location::current()) const
+	static void turn_on() { m_enabled = true; }
+	static void turn_off() { m_enabled = false; }
+	static bool enabled() { return m_enabled; }
+	static priority get_priority() { return priority::debug; }
+	static std::string_view name() { return "ECHO"; }
+
+	template <typename T>
+	[[nodiscard]] static std::string default_fmt_value(const T& value)
 	{
-		if (output::config::instance().above_priority_threshold(output::echo))
+		std::stringstream ss;
+		ss << " == " << value;
+		return ss.str();
+	}
+
+	template <typename T>
+	static inline std::function<decltype(default_fmt_value<T>)> format_value{
+		default_fmt_value<T>
+	};
+
+	static inline output::format_msg_src_t formatter {
+		output::default_fmt_msg_src
+	};
+
+	static void emit(
+		const std::string_view message,
+		const std::source_location source = std::source_location::current())
+	{
+		if (const auto& o{ output::channel_stream<output_config<echo>>() }; o)
 		{
-			output::config::instance().output_stream()
-				<< m_formatter(output::echo, message, source) << '\n';
+			o.value().get()
+				<< output::format_head(name())
+				<< formatter(message, source)
+				<< '\n';
 		}
 	}
 
-	void emit_echo(
+	static void emit(
 		const auto result,
 		const std::string_view message,
-		const std::source_location source
-			= std::source_location::current()) const
+		const std::source_location source = std::source_location::current())
 	{
-		if (output::config::instance().above_priority_threshold(output::echo))
+		if (const auto& o{ output::channel_stream<output_config<echo>>() }; o)
 		{
-			output::config::instance().output_stream()
-				<< m_formatter(output::echo, message, source)
-				<< " == " << result << '\n';
+			o.value().get()
+				<< output::format_head(name())
+				<< formatter(message, source)
+				<< format_value<decltype(result)>(result)
+				<< '\n';
 		}
 	}
-
-private:
-	echo_formatter_t m_formatter{
-		output::internal::config::default_formatter
-	};
 };
-}// namespace internal
 
-using config = fgl::singleton<internal::config>;
+static_assert(output_channel<output_config<echo>>);
 
-}// namespace fgl::debug::echo
+}// namespace fgl::debug
 
 #endif // ifndef FGL_DEBUG_ECHO_HPP_INCLUDED

@@ -276,7 +276,7 @@ consteval bool czip_rvalues()
 	return true;
 }
 
-bool tests()
+bool test_passes()
 {
 	assert(zip_expected_behavior());
 	assert(zip_rvalues());

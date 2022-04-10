@@ -1,6 +1,8 @@
 #pragma once
 #ifndef FGL_BITWISE_HPP_INCLUDED
 #define FGL_BITWISE_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
+
 
 #include <cstdint> // uint_fast8_t
 #include <climits> // CHAR_BIT

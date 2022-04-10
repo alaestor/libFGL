@@ -1,6 +1,7 @@
 #pragma once
 #ifndef FGL_DEBUG_FIXME_HPP_INCLUDED
 #define FGL_DEBUG_FIXME_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
 
 /// QUICK-START GUIDE
 /*
@@ -18,7 +19,7 @@
 	FIX_THIS(expression);
 
 	To disable all [FIXME] output, define NDEBUG above this include,
-	or set fgl::debug::output::config threshold to be greater than fixme
+	or call fgl::debug::output_config<fgl::debug::fixme>::turn_off();
 */
 /// EXAMPLE PROGRAM
 /*
@@ -71,7 +72,6 @@ int main()
 #include <string_view>
 #include <source_location>
 
-#include "../types/singleton.hpp"
 #include "../debug/output.hpp"
 
 #ifdef FGL_SHORT_MACROS
@@ -86,7 +86,7 @@ int main()
 	#ifndef FGL_DEBUG_FIX
 ///////////////////////////////////////////////////////////////////////////////
 		#define FGL_DEBUG_FIX(message) \
-			fgl::debug::fixme::config::instance().emit_fixme_message(message);
+			fgl::debug::output(fgl::debug::fixme(message));
 ///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FGL_DEBUG_FIX already defined
@@ -143,43 +143,47 @@ int main()
 	#endif // ifndef FIX_THIS
 #endif // ifdef FGL_DEBUG_FIXME_SHORT_MACROS
 
-namespace fgl::debug::fixme {
+namespace fgl::debug {
 
-using fixme_formatter_t = output::default_formatter_t;
-
-namespace internal {
-class config final
+struct fixme final
 {
-	FGL_SINGLETON_BOILERPLATE(config);
+	const std::string_view message;
+	const std::source_location location;
 
-public:
-	const fixme_formatter_t& formatter{ m_formatter };
-
-	void change_formatter(const fixme_formatter_t& custom_formatter) noexcept
-	{ m_formatter = custom_formatter; }
-
-	void emit_fixme_message(
-		const std::string_view message = "",
-		const std::source_location source
-			= std::source_location::current()) const
-	{
-		if (output::config::instance().above_priority_threshold(output::fixme))
-		{
-			output::config::instance().output_stream()
-				<< m_formatter(output::fixme, message, source)
-				<< '\n';
-		}
-	}
-
-private:
-	fixme_formatter_t m_formatter{
-		output::internal::config::default_formatter
-	};
+	[[nodiscard]] constexpr explicit
+	fixme(
+		const std::string_view msg,
+		const std::source_location& loc = std::source_location::current())
+	: message{ msg }, location{ loc }
+	{}
 };
-}// namespace internal
 
-using config = fgl::singleton<internal::config>;
+template <>
+class output_config<fixme> final
+{
+	static inline bool m_enabled{ true };
+	public:
+	output_config(auto&&...) = delete;
+	~output_config() = delete;
 
-}// namespace fgl::debug::fixme
+	static void turn_on() { m_enabled = true; }
+	static void turn_off() { m_enabled = false; }
+	static bool enabled() { return m_enabled; }
+	static priority get_priority() { return priority::debug; }
+	static std::string_view name() { return "FIXME"; }
+
+	static inline output::format_msg_src_t formatter{
+		output::default_fmt_msg_src
+	};
+
+	[[nodiscard]] static std::string format(const fixme& fixme)
+	{
+		return formatter(fixme.message, fixme.location);
+	}
+};
+
+static_assert(output_handler<output_config<fixme>, fixme>);
+
+} // namespace fgl::debug
 
 #endif // ifndef FGL_DEBUG_FIXME_HPP_INCLUDED

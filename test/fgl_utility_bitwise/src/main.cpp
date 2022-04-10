@@ -1,6 +1,5 @@
 #include <cstdlib> // EXIT_SUCCESS, EXIT_FAILURE
-#include <ranges>
-#include <concepts>
+#include <limits>
 
 #define FGL_SHORT_MACROS
 #include <fgl/debug/constexpr_assert.hpp>
@@ -30,6 +29,12 @@ int main()
 		static_assert(
 			count_unset_bits(v2) == (sizeof(decltype(v2)) * CHAR_BIT) - 9
 		);
+
+		constexpr unsigned long long v3{
+			std::numeric_limits<unsigned long long>::max()
+		};
+		static_assert(count_set_bits(v3) == sizeof(decltype(v3)) * CHAR_BIT);
+		static_assert(count_unset_bits(v3) == 0);
 	}();
 
 	return EXIT_SUCCESS;

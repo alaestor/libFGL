@@ -50,6 +50,8 @@
 #include <type_traits> // is_constant_evaluated
 #include <cassert>
 
+#include "../environment/libfgl_compatibility_check.hpp"
+
 #ifdef FGL_SHORT_MACROS
 	#define FGL_DEBUG_CONSTEXPR_ASSERT_SHORT_MACROS
 #endif // ifdef FGL_SIMPLE_MACROS
@@ -64,11 +66,17 @@
 	#ifndef FGL_DEBUG_CONSTEXPR_ASSERT
 ///////////////////////////////////////////////////////////////////////////////
 		#define FGL_DEBUG_CONSTEXPR_ASSERT(assertion) \
-			if (std::is_constant_evaluated())\
-			{\
-				if ((assertion) == false) throw;\
-			}\
-			else assert(assertion);
+if (std::is_constant_evaluated())\
+{\
+	if ((assertion) == false)\
+	{/* ignore warning that occurs in noexcept functions; intentional */\
+		_Pragma("GCC diagnostic push")\
+		_Pragma("GCC diagnostic ignored \"-Wterminate\"")\
+		throw; /* ASSERTION FAILED */\
+		_Pragma("GCC diagnostic pop")\
+	}\
+}\
+else assert((assertion));
 ///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FGL_DEBUG_CONSTEXPR_ASSERT already defined
@@ -106,6 +114,6 @@
 		#endif // ifndef constexpr_assert
 	#endif
 
-#endif // ifndef NDEBUG
+#endif // ifndef NDEBUG else
 
 #endif // ifndef FGL_DEBUG_CONSTEXPR_ASSERT_HPP_INCLUDED

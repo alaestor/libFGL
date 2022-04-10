@@ -1,6 +1,7 @@
 #pragma once
 #ifndef FGL_TYPES_SINGLETON_HPP_INCLUDED
 #define FGL_TYPES_SINGLETON_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
 
 /// QUICK-START GUIDE / EXAMPLE PROGRAM
 /*
@@ -29,14 +30,21 @@
 /*
 Type-based static singleton pattern template.
 
-FGL singletons don't require the the template type to be a typical
-"singleton-exclusive" object (*Normally, types intended to be used as
-singletons are exclusively singletons and only have a private constructor and
-delete the copy and move constructors, along with the assignment operator*).
-Any type that satisfies the standard `std::default_initializable` concept
-can be used with the singleton template. For example, `fgl::singleton<int>`
-is a valid singleton whose `instance()` method will return an `int&` to a
-static `int`.
+NOTE: General use of `fgl::singleton` is discouraged**. Prefer `static inline`
+members and methods with deleted constructors where possible.
+
+However, this will continue to be provided because there are still cases where
+this singleton template design is desired.
+
+FFGL singleton can be used to create a "singleton instance" of a type that
+wouldn't otherwise be a singleton. It doesn't  require the the template type
+to be a typical "singleton-exclusive" object (*Normally, types intended to be
+used as singletons are exclusively singletons and only have a private
+constructor and delete the copy and move constructors, along with the
+assignment operator*). Any type that satisfies the standard
+`std::default_initializable` concept can be used with the singleton template.
+For example, `fgl::singleton<int>` is a valid singleton whose `instance()`
+method will return an `int&` to a static `int`.
 
 Note: Despite the requirement that `T` satisfy the `std::default_initializable`
 concept, the singleton template isn't constrained by it due to

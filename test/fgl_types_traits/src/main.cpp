@@ -129,11 +129,30 @@ consteval bool test_not_same()
 	return true;
 }
 
+consteval bool test_pointer_type()
+{
+	using fgl::traits::pointer_type;
+	static_assert(pointer_type<void*>);
+	static_assert(pointer_type<void**>);
+	static_assert(pointer_type<void***>);
+	static_assert(pointer_type<int*>);
+	static_assert(pointer_type<char*>);
+	static_assert(pointer_type<double*>);
+	static_assert(!pointer_type<int>);
+	static_assert(!pointer_type<char>);
+	static_assert(!pointer_type<char[5]>);
+	static_assert(!pointer_type<char&>);
+	static_assert(!pointer_type<char*&>);
+	static_assert(!pointer_type<char(&)[5]>);
+	return true;
+}
+
 consteval bool test_type_concepts()
 {
 	static_assert(test_byte_type());
 	static_assert(test_numeric_type());
 	static_assert(test_not_same());
+	static_assert(test_pointer_type());
 	return true;
 }
 

@@ -4,9 +4,11 @@
 
 // should contain all `debug/*.hpp`
 
-#include "./debug/output.hpp"
-#include "./debug/fixme.hpp"
-#include "./debug/echo.hpp"
 #include "./debug/constexpr_assert.hpp"
+#include "./debug/echo.hpp"
+#include "./debug/exception_occurs.hpp"
+#include "./debug/fixme.hpp"
+#include "./debug/output.hpp"
+#include "./debug/stopwatch.hpp"
 
 #endif // FGL_DEBUG_HPP_INCLUDED

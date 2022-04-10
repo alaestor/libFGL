@@ -1,6 +1,7 @@
 #pragma once
 #ifndef FGL_UTILITY_ENUMERATE_HPP_INCLUDED
 #define FGL_UTILITY_ENUMERATE_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
 
 ///// WARNING README
 // default of T is uint32_t which will either be changed to std::size_t or
@@ -14,7 +15,7 @@
 
 	use fgl::cenumerate() for const references like *cbegin()
 
-	Returns an enumerated fgl::zip range where the first range of the
+	Returns an enumerated range from fgl::zip where the first range of the
 	zip is an incrementing counter of integral type `T`.
 */
 /// EXAMPLE PROGRAM

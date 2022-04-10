@@ -1,11 +1,20 @@
 The Future Gadget Laboratory Library
 ---
 
-**libFGL** — For use with Tempus Edax Rerum projects.
+**libFGL** — Intended for use with Tempus Edax Rerum projects.
 
-A modern C++ header-only library (that will someday become a module).
+This is a modern C++ header-only library that dreams of growing up to be refactored into a module. A miscellaneous assortment of in-house utilities intended to replace frequently duplicated flimsy spoons with sufficiently engineered shovels.
 
-Breaking changes are a feature. No support. No guarentees. Not for production use.
+Breaking changes are a feature. No support. No guarentees. Not for third-party production use.
+
+An important note about documentation
+---
+
+The documentation found here is a high-level overview of libFGL's components which covers the rationale, explanations, examples, and a brief description of interfaces. **The most accurate and up-to-date *reference material* will always be the code and comments in the headers themselves.** libFGL's headers are written to be read and have meaningful comments and names: the interfaces and abstractions are usually concise and relatively self-explanatory. The source code for small example programs are also included.
+
+Only build environments using C++20 & GCC 12 or higher are officially compatible, but most other compilers are partially compatible.
+
+See the [libFGL compatibility check](#libfgl-compatibility-check) documentation for more information.
 
 # Table of Contents
 
@@ -30,12 +39,16 @@ Breaking changes are a feature. No support. No guarentees. Not for production us
   - [Writing tests](#writing-tests)
   - [Test build system & test dependencies](#test-build-system-test-dependencies)
 - [Documentation](#documentation)
-  - [Read me first](#read-me-first)
+  - [Environment](#environment)
+    - [Build type](#build-type)
+    - [libFGL compatibility check](#libfgl-compatibility-check)
   - [Debug](#debug)
     - [Constexpr assert](#constexpr-assert)
     - [Echo](#echo)
+    - [Exception Occurs](#exception-occurs)
     - [Fixme](#fixme)
     - [Output](#output)
+    - [Stopwatch](#stopwatch)
   - [I/O](#io)
     - [Binary files](#binary-files)
   - [Types](#types)
@@ -47,9 +60,16 @@ Breaking changes are a feature. No support. No guarentees. Not for production us
     - [Traits](#traits)
   - [Utility](#utility)
     - [Bitwise](#bitwise)
+    - [Circular iterator](#circular-iterator)
     - [Enumerate](#enumerate)
+    - [Linear matrix alias](#linear-matrix-alias)
+      - [Linear matrix alias - Utilities](#linear-matrix-alias-utilities)
+      - [Linear matrix alias - Static alias](#linear-matrix-alias-static-alias)
+      - [Linear matrix alias - Dynamic alias](#linear-matrix-alias-dynamic-alias)
     - [Make byte array](#make-byte-array)
+    - [Matrix](#matrix)
     - [Random](#random)
+    - [Sleep](#sleep)
     - [Zip](#zip)
 
 <!-- /code_chunk_output -->
@@ -225,10 +245,53 @@ Here, `fgl_utility_enumerate` requires that the `fgl_utility_zip` and `fgl_types
 ---
 # Documentation
 
-## Read me first
+---
+## Environment
 
-The documentation found here is a high-level overview of libFGL's features which provides explanations and examples. The most accurate and up-to-date **reference material** will always be the code and comments in the headers themselves. libFGL's headers are written to be read and have meaningful comments and symbol names: the interfaces and abstractions are usually concise and relatively self-explanatory. The source code for small example programs are also included in the header comments.
+---
+### Build type
 
+`#include <fgl/environment/build_type.hpp>`
+
+`constexpr` boolean values represent the build environment of the translation unit by definition detection of the macro `NDEBUG`. If `NDEBUG` is not defined, the environment is assumed to be in a debug state.
+
+**Important limitations**
+
+Include order and location matters.
+
+The booleans are only a valid reflection of the program state at the point of inclusion because the `NDEBUG` symbol may be defined, un-defined, or re-defined at any point before or after inclusion of this header which may make the boolean state invalid (not an accurate reflection of the the macro).
+
+For this reason, usage of `#ifdef` and `#ifndef` is recommended in translation units which may `#define` and `#undef` the `NDEBUG` symbol frequently or with unpredictable header ordering.
+
+**Interface**
+
+1. `false` if `NDEBUG` was defined at time of including the header, otherwise `true`
+
+	```cpp
+	[[maybe_unused]] inline constexpr bool debug_build
+	```
+
+2. The opposite (boolean negation) of `debug_build`
+
+	```cpp
+	[[maybe_unused]] inline constexpr bool release_build
+	```
+
+---
+### libFGL compatibility check
+`#include <fgl/environment/libfgl_compatibility_check.hpp>`
+
+This header is included by nearly everything in libFGL. It performs preprocessor checks to ensure an *officially compatible* environment (minimum C++ language specification and compiler version).
+
+**The constraints on official compatibility are extremely narrow.** The true viability of an environment will vary. At the time of writing, implementation support for C++20 features is spotty at best; especially with regards to `constexpr`. libFGL components and their tests make heavy use of `constexpr`. Some tests may not compile or function properly within 'incompatible' environments despite some of the components themselves being perfectly viable in a runtime state. Users of libFGL may bypass compatibility checks at their sole discretion.
+
+**Bypassing checks:**
+
+**All checks** can be bypassed by defining `FGL_ACKNOWLEDGE_INCOMPATIBLE_ENVIRONMENT`
+
+**Language version checks** can be bypassed by defining `FGL_ACKNOWLEDGE_INCOMPATIBLE_STANDARD`
+
+**Compiler version checks** can be bypassed by defining `FGL_ACKNOWLEDGE_INCOMPATIBLE_COMPILER`
 
 ---
 ## Debug
@@ -306,6 +369,9 @@ FGL_DEBUG_ECHOV(1+1); // ouputs "1+1 == 2"
 ECHO("message");
 ECHOV(1+1);
 ```
+
+To disable all `ECHO` output, define `NDEBUG` above the include or call `fgl::debug::output_config<fgl::debug::echo>::turn_off();`
+
 **Example program**
 ```cpp
 // define enables the short "ECHO" and "ECHOV"
@@ -352,15 +418,123 @@ int main()
 	- The expression will still be evaluated if `NDEBUG` is defined.
 	- Note: function-like preprocessor macros may have difficulty parsing expressions that contain comma characters (`,`) such as `MACRO(f<a,b>());` in which case you may need to wrap the expression in parentheses: `MACRO((f<a,b>()));`
 
-**Configuration singleton:** `fgl::debug::echo::config.instance()`
+**Configuration:** `fgl::debug::output_config<fgl::debug::echo>`
 
-Notable public members:
+The `echo` specialization of `output_config` satisfies the `fgl::debug::output_channel` concept, which means it acts as the channel for `fgl::debug::echo`.
 
-1. Set a custom formatter for fixme.
+The channel default is enabled and is set to `priority::debug`, and is named `"ECHO"`.
+
+1. Deleted constructors and destructor. Intended as a static-only (singleton) type which should never be instantiated.
+
 	```cpp
-	void change_formatter(const echo_formatter_t& custom_formatter)
+	output_config(auto&&...) = delete;
+	~output_config() = delete;
 	```
-	- `ECHOV` will always append `== (the result of the expression)` to the message.
+
+2. The channel interface (satisfies `fgl::debug::output_channel`)
+
+	- `static void turn_on()` to enable the output channel.
+
+	- `static void turn_off()` to disable the output channel.
+
+	- `static bool enabled()` the current enabled state.
+
+	- `static priority get_priority()` the priority, `fgl::debug::priority::debug`.
+
+	- `static std::string_view name()` the name of the channel (`"ECHO"`).
+
+3. The default template for formatting `ECHOV` values
+
+	```cpp
+	template <typename T>
+	[[nodiscard]] static std::string default_fmt_value(const T& value)
+	```
+
+	- Note: only `T` types with an overloaded `std::ostream` `operator<<` can be used with `ECHOV`. The implementation details of the default value formatter uses the `operator<<` of `T`, so if `T` doesn't have a compatible overload then the template synthesization will fail.
+
+4. The template for the customizable value formatter
+
+	```cpp
+	template <typename T>
+	static inline std::function<decltype(default_fmt_value<T>)> format_value
+	```
+
+5. The customizable message formatter, which defaults to `output::default_fmt_msg_src`
+
+	```cpp
+	static inline output::format_msg_src_t formatter
+	```
+
+6. The internal methods for sending `ECHO` and `ECHOV` output
+
+	- the output method for `ECHO`
+
+	```cpp
+	static void emit(
+		const std::string_view message,
+		const std::source_location source = std::source_location::current())
+	```
+
+	- the output method for `ECHOV`
+
+	```cpp
+	static void emit(
+		const auto result,
+		const std::string_view message,
+		const std::source_location source = std::source_location::current())
+	```
+
+---
+### Exception Occurs
+`#include <fgl/debug/exception_occurs.hpp>`
+
+An immediate try-catch lambda wrapper which can be used to easily convert exceptions to `bool`. Useful for testing and "inline" exception handling.
+
+It's worth noting that the idea of using exception-to-bool conversions for error handling is bad. Aside from making exception tests easier to read, this should only be employed in niche circumstances and not used as an error-handling design strategy. Exceptions should be exceptional, but some libraries are stupid and this can help contain their stupidity in a relatively clean and readable way.
+
+**Quickstart**
+```cpp
+// assertions always true
+assert(FGL_DEBUG_EXCEPTION_OCCURS( throw int ));
+assert(FGL_DEBUG_EXCEPTION_OCCURS( func_always_throws() ));
+assert(!FGL_DEBUG_EXCEPTION_OCCURS( func_never_throws() ));
+assert(!FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS( std::exception, func_never_throws() ));
+assert(FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS( expected_e, func_throws_expected_e() ));
+assert(!FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS( different_e, func_throws_expected_e() ));
+// if you #define FGL_DEBUG_EXCEPTION_OCCURS_SHORT_MACROS or FGL_SHORT_MACROS
+assert(exception_occurs( throw int ));
+assert(exception_occurs( func_always_throws() ));
+assert(!exception_occurs( func_never_throws() ));
+assert(!specific_exception_occurs( std::exception, func_never_throws() ));
+assert(specific_exception_occurs( expected_e, func_throws_expected_e() ));
+
+// note: `excpected_e` exception isn't caught and will propogate.
+try{ specific_exception_occurs( different_e, func_throws_expected_e() ); }
+catch(expected_e&){/* we get here */ }
+
+// example of dealing with a stupid_lib::Thing factory
+stupid_lib::ThingHolder thing_holder;
+
+while (specific_exception_occurs(
+	stupid_lib::busy,
+	thing_holder = stupid_lib::make_thing()))
+{
+	wait_a_bit();
+}
+
+use(thing_holder);
+```
+
+**Interface**
+**Preprocessor defininitions:**
+1. Evaluates to boolean `true` if any exception is caught, otherwise `false`
+
+	`FGL_DEBUG_EXCEPTION_OCCURS(expression)` <sup> [*opt-in* short macro](#short-macros): `exception_occurs(expression)` </sup>
+
+2. Evaluates to boolean `true` if a specific exception type is caught, and `false` if no exceptions occur. Exceptions that aren't the specified type are re-thrown.
+
+	`FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS(exception, expression)` <sup> [*opt-in* short macro](#short-macros): `specific_exception_occurs(exception, expression)` </sup>
+
 
 ---
 ### Fixme
@@ -378,6 +552,9 @@ FIX_ME;
 FIX("a message");
 FIX_THIS(expression);
 ```
+
+To disable all `FIXME` output, define `NDEBUG` above the include or call `fgl::debug::output_config<fgl::debug::fixme>::turn_off();`
+
 **Example program**
 ```cpp
 #include <iostream>
@@ -414,7 +591,9 @@ int main()
  \_____ the author is an idiot
 ```
 **Interface**
+
 **Preprocessor defininitions:**
+
 1. Send a `string_view` with source location to the debug output stream (`fixme` priority)
 
 	`FGL_DEBUG_FIX(message)` <sup> [*opt-in* short macro](#short-macros): `FIX(message)` </sup>
@@ -430,100 +609,893 @@ int main()
 	- The expression will still be evaluated if `NDEBUG` is defined.
 	- Note: function-like preprocessor macros may have difficulty parsing expressions that contain comma characters (`,`) such as `MACRO(f<a,b>());` in which case you may need to wrap the expression in parentheses: `MACRO((f<a,b>()));`
 
-**Configuration singleton:** `fgl::debug::fixme::config.instance()`
+**Configuration:** `fgl::debug::output_config<fgl::debug::fixme>`
 
-Notable public members:
+The `fixme` specialization of `output_config` satisfies the `fgl::debug::output_handler` concept, which means it acts as both the output channel and formatter for`fgl::debug::fixme`.
 
-1. Set a custom formatter for fixme.
+The channel default is enabled and is set to `priority::debug`, and is named `"FIXME"`.
+
+1. Deleted constructors and destructor. Intended as a static-only (singleton) type which should never be instantiated.
+
 	```cpp
-	void change_formatter(const fixme_formatter_t& custom_formatter)
+	output_config(auto&&...) = delete;
+	~output_config() = delete;
 	```
 
+2. The channel interface (satisfies `fgl::debug::output_channel`)
+
+	- `static void turn_on()` to enable the output channel.
+
+	- `static void turn_off()` to disable the output channel.
+
+	- `static bool enabled()` the current enabled state.
+
+	- `static priority get_priority()` the priority, `fgl::debug::priority::debug`.
+
+	- `static std::string_view name()` the name of the channel (`"FIXME"`).
+
+3. The customizable formatter, which defaults to `output::default_fmt_msg_src`
+
+	```cpp
+	static inline output::format_msg_src_t formatter
+	```
+
+4. The formatter interface (satisfies `fgl::debug::output_formatter<fgl::debug::fixme>`)
+
+	```cpp
+	[[nodiscard]] static std::string format(const fixme& fixme)
+	```
+
+---
 ### Output
 `#include <fgl/debug/output.hpp>`
 
 For configuration and access of the libFGL debug output stream. The stream defaults to `std::cout` but can be redirected to any `ostream`.
 
-Defines a default formatter which is used by other libFGL components (such as [Echo](#echo) and [Fixme](#fixme)).
+While intended as a "debug output stream", the libFGL output system could be used for any purpose, including logging. For this reason, several output priorities and thresholds are provided (`fgl::debug::priority` enum).
 
-Defines priority levels which can be used to exclude output from sources that are bellow a configurable threshold. User-defined priorities are allowed.
+Establishes a configurable type-specific output system. Defines concepts, conventions, priorities, concrete interface objects, default formatters, and a generic output configuration template.
+
+Each type which is output can correspond to an output channel and output formatter.
+
+**Quickstart**
+
+Use `fgl::debug::output()` to send output to the libFGL output stream. 	Generic channels will be instantiated for every type output, and are configurable via `fgl::debug::output_config<T>`.
+
+The generic `output_config<T>` default formatter is defined to use the `operator<<(std::ostream&, T)` but can be customized by assigning to the `std::function` member `output_config<T>::format`. Due to this default requirement, a type cannot be output using the generic formatters unless it has an appropriate `operator<<` overload.
+
+Generic output can be disabled from appearing entirely by assigning to the `fgl::debug::generic_output_disabled` boolean.
+
+For more control over output and type-specific formatting, the user can define static `output_channel`s and `output_formatter`s for specific types. This allows for use of `output::custom<T, T_channel, T_formatter>()`.
+
+Concepts for static objects:
+
+- `output_channel` must have an enable state, name, and priority.
+
+- `output_formatter` must have a format function for `T`.
+
+- `output_handler` is the combination of a formatter and a channel.
+
+An `output_handler` is required to use the `output::handled<T_handler>()` method, which is equivalent to `output::custom<T, T_handler, T_handler>()`. The convention is to specialize `output_config<T>` as an `output_handler`. If that's case, you can use the `output::operator()` which is equivalent to `output::handled<T, output_config<T>>(t)`.
+
+Whether or not a channel can output (`output::can_send<T_channel>()`) is determined by three factors: the channel's priority in relation to the `output::priority_threshold`, the channel's `enabled()` state, and the `output::enabled` boolean.
+
+`output::priority_threshold()` gets/sets the minimum priority for channels to output. Only channels with a priority greater than or equal to this value will recieve the output stream via `output::channel_stream<T_channel>`.
+
+Use `output::stream()` to get/set the libFGL output stream.
+
+`output` contains several configurable formatters (`format_head`, `format_msg`, `format_msg_src`) and also defines their defaults.
+
+Most libFGL components that interact with libFGL output will have customization settings available in a `output_config<T>` specialization.
 
 **Example program**
 ```cpp
+#include <string>
+#include <sstream>
+
 #include <fgl/debug/output.hpp>
+
+// This example shows a more complex usecase of a template. For concete types,
+// just specialize `output_config` to satisfy the `output_handler` concept
+
+// the user defined type; a template in this case.
+template <typename T_position = double>
+struct entity
+{
+	std::string name;
+	T_position position[3];
+};
+
+// an output channel for the user defined type
+class entity_channel
+{
+	static inline bool m_enabled{ true };
+	public:
+	// should never be instantiated
+	entity_channel(auto&&...) = delete;
+	~entity_channel() = delete;
+
+	// mechanisms to satisfy the output_channel concept
+	static void turn_on() { m_enabled = true; }
+	static void turn_off() { m_enabled = false; }
+	static bool enabled() { return m_enabled; }
+	static std::string_view name() { return "Entity"; }
+
+	static fgl::debug::priority get_priority()
+	{ return fgl::debug::priority::debug; }
+};
+
+static_assert(fgl::debug::output_channel<entity_channel>);
+
+// an output formatter for the user defined type (a template in this case)
+template <typename T_position>
+struct entity_formatter
+{
+	entity_formatter(auto&&...) = delete;
+	~entity_formatter() = delete;
+	static std::string format(const entity<T_position>& entity)
+	{
+		std::ostringstream ss;
+		ss
+			<< entity.name << " at coordinates ("
+			<< entity.position[0] << ","
+			<< entity.position[1] << ","
+			<< entity.position[2] << ")";
+		return ss.str();
+	}
+};
+
+// make sure we satisfy the formatter concept
+static_assert(
+	fgl::debug::output_formatter<entity_formatter<double>, entity<double>>
+);
+
+/*
+now that we have a channel and formatter, we could use them directly via
+`output::custom<T, T_channel, T_formatter>(t)`, but that's quite cumbersome.
+
+For concete types, it's libFGL convention to define the channel and
+formatter together in a specialization of `output_config` which satifies the
+`output_handler` concept; combining the channel and formatter.
+
+That allows us to the the `output::operator()` instead which is much easier,
+and means having a unified configuration interface via `output_config<T>`.
+
+We can abstract `entity_channel` and `entity_formatter` into a
+handler object which will redirect the apporpriate calls. This way all the
+`output_config<entity<T>>` synthesized objects use the same channel,
+but have different (template-synthesized) formatters.
+
+Now we can use `output::operator()` with any entity type, and all of the
+configuration can be done thru the handler.
+*/
+
+template <typename T_position>
+class fgl::debug::output_config<entity<T_position>>
+{
+	public:
+	// redirect so all synethized output_config<T> types use the same channel.
+	static void turn_on() { entity_channel::turn_on(); }
+	static void turn_off() { entity_channel::turn_off(); }
+	static bool enabled() { return entity_channel::enabled(); }
+	static std::string_view name() { return entity_channel::name(); }
+
+	static fgl::debug::priority get_priority()
+	{ return entity_channel::get_priority(); }
+
+	// call the appropriate formatter
+	static std::string format(const entity<T_position>& entity)
+	{ return entity_formatter<T_position>::format(entity); }
+};
+
+static_assert(
+	fgl::debug::output_handler<
+		fgl::debug::output_config<entity<double>>,
+		entity<double>
+	>
+);
 
 int main()
 {
-	// make a reference to the output configuration singleton
-	auto& config{ fgl::debug::output::config::instance() };
+	entity player{ "Lexy", {0.0, 0.0, 0.0} };
 
-	// redirect libFGL debug output to std::cerr
-	config.change_output_stream(std::cerr);
+	// set the output stream (redundant; defaults to std::cout)
+	fgl::debug::output::stream(std::cout);
 
-	// only output warnings and above
-	using priority = fgl::debug::output::priority_e;
-	config.change_output_threshold(priority::warn);
+	// channel priority must be >= output threshold to display output
+	fgl::debug::output::priority_threshold( // defaults to priority::minimum
+		entity_channel::get_priority() // defined as priority::debug
+	);
 
-	// send something to the output stream
-	config.output_stream() << "Hello, world!" << std::endl;
+	// channel enabled() must return true to display output
+	entity_channel::turn_on(); // redundant in this case, defaults to enabled
+
+	// output player entity; appends a '\n' to the formatted output
+	fgl::debug::output::custom<
+		entity<double>,
+		entity_channel,
+		entity_formatter<double>
+	>(player);
+
+	// alternatively, since we satified the `output_handler` concept
+	using edouble_handler_t = fgl::debug::output_config<entity<double>>;
+	fgl::debug::output::handled<entity<double>, edouble_handler_t>(player);
+
+	// but, even better since we specialized `output_config` as our handler:
+	fgl::debug::output(player);
+
+	// make sure we flush the stream since the program terminates after this
+	fgl::debug::output::stream().flush();
 }
 ```
 **Example program output**
 ```
-Hello, world!
+[Entity] Lexy at coordinates (0,0,0)
+[Entity] Lexy at coordinates (0,0,0)
+[Entity] Lexy at coordinates (0,0,0)
 ```
 **Interface**
 
-**Configuration singleton:** `fgl::debug::output::config.instance()`
+As an overview, the interface consists of: priorities, concepts, boolean switches, the `output_config` template as a generic handler, the concrete `output` structure and its instantiation as `fgl::debug::output`, its configurable members, and finally its member functions which serve as the primary interface for interacting with the output stream.
 
-Notable public members:
-
-1. Get the priority threshold
-	```cpp
-	priority_e priority_threshold() const noexcept
-	```
-
-2. Change the priority threshold (only output from `priority` sources and above should be sent to the debug output stream)
-	```cpp
-	void change_priority_threshold(const priority_e priority) noexcept
-	```
-
-3. Check if `priority` is greater than or equal to the current threshold
-	```cpp
-	bool above_priority_threshold(const priority_e priority) const noexcept
-	```
-
-4. Change the debug output stream
-
-	(4.1)
-	```cpp
-	void change_output_stream(std::ostream* const output_stream) noexcept
-	```
-	(4.2)
-	```cpp
-	void change_output_stream(std::ostream& output_stream) noexcept
-	```
-
-5. Get a reference to the debug output stream
+- An `enum class` used to specify the priority of channels and the threshold for output.
 
 	```cpp
-	std::ostream& output_stream() const
+	enum class priority : unsigned char
+	{
+		minimum,
+		debug,
+		info,
+		message,
+		event,
+		warning,
+		error,
+		fatal,
+		maximum
+	};
 	```
 
-6. The default formatter used by other libFGL components
+**Concepts:**
+
+1. Satisfied if the type provides the required information and features to be an output channel via static methods
+
 	```cpp
-	static std::string default_formatter(
-		const priority_e priority,
-		const std::string_view message,
-		const std::source_location source)
+	template <class T>
+	concept output_channel = requires
+	{
+		{ T::get_priority() } -> std::same_as<priority>;
+		{ T::name() } -> std::same_as<std::string_view>;
+		{ T::enabled() } -> std::same_as<bool>;
+		{ T::turn_on() } -> std::same_as<void>;
+		{ T::turn_off() } -> std::same_as<void>;
+	};
 	```
 
-**Priorities and formatters** `namespace fgl::debug::output`
-Output proprity is defined as `enum priority_e : uint_fast8_t`. As a convention, libFGL components that use the debug output will check to ensure that the message priority is `above_priority_threshold` (3). If `true`, the message should be sent to a formatter, and its return value sent to the output stream. Only the component and formatters are aware of and handle message priorities.
+2. Satisfied if the type provides a static method `format` which is used to format the output a given type as a `std::string`.
 
-The lowest priority is `priority_e::ALL`, and the highest is `priority_e::MAX`. User-defined output should only use `ALL`, `debug`, `info`, `warn`, `error`, and `MAX` priorities, or a custom user-defined priority. All other priorities are intended for internal use. Custom priorities should be defined relative to and greater than `priority_e::MAX`, and can be specially handled by defining custom formatters which recieve the message priority as an argument.
+	```cpp
+	template <class T_formatter, typename T_value>
+	concept output_formatter = requires (const T_value& t)
+	{
+		{ T_formatter::format(t) } -> std::same_as<std::string>;
+	};
+	```
 
-Use the `default_formatter` member of the internal configuration singleton as an example when defining custom formatters.
+3. Satisfied if the type is a combination of a channel and formatter for a given type.
+
+	```cpp
+	template <class T, typename T_value>
+	concept output_handler = output_channel<T> && output_formatter<T, T_value>;
+	```
+
+
+**The `output_config` template and generic output handlers:**
+
+```cpp
+template <typename T>
+class output_config
+```
+
+The `output_config` class template is intended to be specialized to contain per-type output configuration settings. Ideally, in a form which satisfies `output_handler`. Most libFGL components that interact with libFGL output will have customization settings available in a specialization of `output_config`, which will allow for user-defined formatters and interaction with the channel settings. For example, `fgl::type` may specialize `fgl::output_config<fgl::type>` which will have a mutable `std::function(std::string(fgl::type)) format` member and the ability to `turn_off()` and `turn_on()` the `fgl::type` unique output channel. As this is a convention and quite flexible; interfaces may vary.
+
+In its non-specialized form, it acts as a generic output handler (both a channel and formatter for the template argument `T`).
+
+There's a boolean switch to disable output from all generically instantiated (non-specialized) `output_config<>` channels: `static inline bool generic_output_disabled`
+
+Notable public members of the generic `output_config`:
+
+1. Deleted constructors and destructor. Intended as a static-only (singleton) type which should never be instantiated
+
+	```cpp
+	output_config(auto&&...) = delete;
+	~output_config() = delete;
+	```
+
+2. The interface to satisfy `output_channel`
+
+	1. `static void turn_on()` will enable channel output
+
+	2. `static void turn_off()` will disable channel output
+
+	3. `static bool enabled()` will return `true` if the channel is in an enabled state and the `generic_output_disabled` boolean is `false`.
+
+	4. `static priority get_priority()` returns `priority::info`
+
+	5. `static std::string_view name()` returns `"GENERIC"`
+
+3. The interface to satisfy `output_formatter<T>`
+
+	- `static inline std::function<std::string(const T&)> format`
+
+	- and its default `static std::string default_formatter(const T& t)` which will use the `operator<<(std::ostream&, T)`. Note that because the generic default formatter uses the stream operator overload, types without an overload cannot instantiate a generic `output_config`.
+
+**The `output` class and scoped instantiation:**
+
+```cpp
+struct output final
+```
+```cpp
+[[maybe_unused]] static inline output output;
+```
+
+1. boolean switch for whether or not libFGL output is enabled.
+
+	```cpp
+	static inline bool enabled{ true };
+	```
+
+2. A setter/getter for the output priority threshold. Defaults to `fgl::debug::priority::minimum`. Only output from channels whose priority is equal to or greater than this threshold should be sent to the output stream.
+
+	```cpp
+	class priority_threshold_t
+	{ /* ... */ }
+	static inline priority_threshold;
+	```
+
+	- setter
+
+		```cpp
+		void operator()(priority priority_threshold) noexcept
+		```
+
+	- getter
+
+		```cpp
+		[[nodiscard]] priority operator()() const noexcept
+		```
+
+	- comparison operators
+
+		```cpp
+		auto operator<=>(const priority priority) const noexcept
+		```
+
+3. A getter/setter for the output stream.
+
+	```cpp
+	class output_stream_t
+	{ /* ... */ }
+	static inline stream;
+	```
+
+	- setter
+
+		```cpp
+		void operator()(std::ostream& output_stream) noexcept
+		```
+
+	- getter
+
+		```cpp
+		[[nodiscard]] std::ostream& operator()() const noexcept
+		```
+
+4. Checks whether or not a channel is permitted to send output to the stream. This is determined by the `output::enabled` boolean, the channel's `enabled()` state, and the channel's priority in relation to the `output::priority_threshold()`
+
+	```cpp
+	template <output_channel T_channel>
+	static bool can_send() noexcept
+	```
+
+5. A request method to be given access to the stream. Returns a `std::optional` to a refference-wrapped `std::ostream` if the channel `can_send()`. Otherwise `nullopt`.
+
+	```cpp
+	template <output_channel T_channel>
+	[[nodiscard]] static
+	std::optional<std::reference_wrapper<std::ostream>> channel_stream()
+	```
+
+6. Definition of default formatters
+
+	- default formatter for the channel name output prefix
+
+		```cpp
+		[[nodiscard]] static inline std::string default_fmt_head(
+			const std::string_view name)
+		```
+
+	- default formatter for a message string output
+
+		```cpp
+		[[nodiscard]] static inline std::string default_fmt_msg(
+			const std::string_view message)
+		```
+
+	- default formatter for a message string and source location output
+
+		```cpp
+		[[nodiscard]] static inline std::string default_fmt_msg_src(
+			const std::string_view message,
+			const std::source_location source)
+		```
+
+7. Type aliases and members for each `std::function` wrapped formatter. Each type alias is defined in reference to the function signatures of the above defaults.
+
+	- the formatter for the channel name prefix
+
+		```cpp
+		using format_head_t = std::function<decltype(default_fmt_head)>;
+		static inline format_head_t format_head{ default_fmt_head };
+		```
+
+	- the formatter for a channel name and message string output
+
+		```cpp
+		using format_msg_t = std::function<decltype(default_fmt_msg)>;
+		static inline format_msg_t format_msg{ default_fmt_msg };
+		```
+
+	- the formatter for a channel name, message string, and source location output
+
+		```cpp
+		using format_msg_src_t = std::function<decltype(default_fmt_msg_src)>;
+		static inline format_msg_src_t format_msg_src{ default_fmt_msg_src };
+		```
+
+8. Output request on a specified channel, using a specified formatter. The output will only be sent to the stream if `can_send<T_channel>()` returns `true`.
+
+	```cpp
+	template
+	<
+		typename T,
+		output_channel T_channel,
+		output_formatter<T> T_formatter
+	>
+	static void custom(const T& t)
+	```
+	- The output will be sent to the stream with the following format:
+
+		```cpp
+		/* libFGL output stream */ << format_head(T_channel::name()) << T_formatter::format(t) << '\n';
+		```
+
+9. Output request providing the channel and formatter via an `output_handler`. The call is equivalent to `custom<T, T_handler, T_handler>(t)`.
+
+	```cpp
+	template <typename T, output_handler<T> T_handler>
+	static void handled(const T& t)
+	```
+
+10. Output request providing the channel and formatter via the corresponding `output_config<T>`. The operator's `T` argument must have a corresponding `output_config<T>` which satisfies the `output_handler` concept. The call is equivalent to `handled<T, output_config<T>>(t)`.
+
+	```cpp
+	template <typename T>
+	requires output_handler<output_config<T>, T>
+	void operator()(const T& t) const
+	```
+
+---
+### Stopwatch
+`#include <fgl/debug/stopwatch.hpp>`
+
+An accumulating stopwatch utility, used to time things and calculate statistics. Provides configurable formatters, `to_string_...` helper functions, and support for `fgl::debug::output`.
+
+**Quickstart**
+```cpp
+using namespace fgl::debug;
+// reserve is used by an internal vector to avoid reallocations
+stopwatch sw("name", reserve);
+// if no name is provided, stopwatch will be named by the source location
+// if no `reserve` is provided, defaults 1000 laps
+
+sw.start();
+do_a_thing();
+sw.stop();
+// uses output_config<stopwatch>::format_duration
+std::cout << duration_to_string(sw.previous_lap()) << std::endl;
+sw.reset();
+
+sw.start()
+for (;cond();)
+{
+	do_a_thing();
+	sw.lap(); // each lap includes cond() time
+}
+// stop without recording so the last lap() is accurate
+sw.stop_without_record();
+
+// send statistics to debug output stream
+fgl::debug::output(sw);
+```
+**Example program**
+```cpp
+#include <iostream>
+#include <thread>
+
+#define NDEBUG // eliminate some stopwatch assertions
+#include <fgl/debug/stopwatch.hpp>
+
+int main()
+{
+	fgl::debug::stopwatch sw;
+	std::this_thread::yield(); // warmup
+	for (int i{}; i < 100; ++i)
+	{
+		sw.start();
+		std::this_thread::yield();
+		sw.stop();
+	}
+
+	std::cout << "cout: "<< sw << '\n' << std::endl;
+
+	fgl::debug::output(sw); // outputs statistics by default
+
+	// flush because the program terminates right after this
+	fgl::debug::output::stream().flush();
+}
+```
+**Example program output**
+```
+cout: yield timer: 11µs 200ns  (100 laps)
+
+[STOPWATCH]
+ \_____ Statistics: yield timer
+        Number of laps: 100
+        Total elapsed: 11µs 200ns
+        Mean lap:      112ns
+        Median lap:    100ns
+        Min lap:       100ns
+        Max lap:       200ns
+```
+
+**Interface** `namespace fgl::debug`
+
+
+The **generic_stopwatch** utility class template
+
+```cpp
+template <typename T_clock = std::chrono::steady_clock>
+requires std::chrono::is_clock_v<T_clock> && T_clock::is_steady
+class generic_stopwatch
+```
+
+Constructors:
+
+1. Explicit constructors.
+
+	Stopwatch instances are named for human convenience. `reserve` is used by an internal vector and should equal the expected number of laps if possible, to avoid reallocations.
+
+	1. constructs a stopwatch with a defaulted name, which is determined by a defaulted source location argument. The default name is equivalent to `std::string(sl.function_name()) + " in " + sl.file_name()`
+
+		```cpp
+		[[nodiscard]] constexpr explicit generic_stopwatch(
+			const std::source_location sl = std::source_location::current(),
+			const std::size_t reserve = 1000)
+		```
+
+	2. constructs a stopwatch with a provided name
+
+		```cpp
+		[[nodiscard]] constexpr explicit
+		generic_stopwatch(
+			const std::string_view in_name,
+			const std::size_t reserve = 1000)
+		```
+
+2. Defaulted constructors
+
+	1. the explicitly defaulted copy constructor
+
+		```cpp
+		constexpr generic_stopwatch(const generic_stopwatch& sw) = default;
+		```
+
+	2. the explicitly defaulted move constructor
+
+		```cpp
+		constexpr generic_stopwatch(generic_stopwatch&& sw) = default;
+		```
+
+Notable member type aliases:
+
+1. the trivial clock used by the stopwatch
+
+	```cpp
+	using clock_t = T_clock;
+	```
+
+2. the `std::chrono::time_point` used by the stopwatch
+
+	```cpp
+	using time_point_t = std::chrono::time_point<clock_t>;
+	```
+
+3. the duration resolution used by the stopwatch's `clock_t`
+
+	```cpp
+	using duration_t = T_clock::duration;
+	```
+
+Notable member variables:
+
+1. the name of the stopwatch
+
+	```cpp
+	std::string name;
+	```
+
+Notable member functions:
+
+The stopwatch maintains internal state when `NDEBUG` is not defined. Assertions are made that things are being done in a reasonable order. For example, the stopwatch elapsed time and lap durations can't be read if the stopwatch hasn't stopped. You can't record a lap or stop the stopwatch before you start it. You can't record a lap or stop timepoint that's less than the last recorded time. Etc.
+
+1. Start the stopwatch
+
+	- `constexpr void start(const time_point_t time_point)`
+	- `void start()` equivalent to `start(T_clock::now())`
+
+2. Record a lap time
+
+	- `constexpr void lap(const time_point_t time_point)`
+	- `void lap()` equivalent to `lap(T_clock::now())`
+
+3. Stop the stopwatch and record a lap time
+
+	- `constexpr void stop(const time_point_t time_point)`
+	- `void stop()` equivalent to `stop(T_clock::now())`
+
+4. Stop the stopwatch without recording a lap time
+
+	```cpp
+	constexpr void stop_without_record() noexcept
+	```
+
+5. Reset the stopwatch, clearing all recorded laps
+
+	```cpp
+	constexpr void reset()
+	```
+
+6. Get the number of laps that have been recorded
+
+	```cpp
+	[[nodiscard]] constexpr std::size_t number_of_laps() const
+	```
+
+7. Get the duration of a given lap (within range `[0, number_of_laps)`)
+
+	```cpp
+	[[nodiscard]] constexpr
+	duration_t get_lap(const std::size_t lap_number) const
+	```
+
+8. Get the duration of the previous lap (equivalent to `sw.get_lap(sw.number_of_laps()-1)`)
+
+	```cpp
+	[[nodiscard]] constexpr duration_t previous_lap() const
+	```
+
+9. Get a `const` reference to a vector containing the lap durations
+
+	```cpp
+	[[nodiscard]] constexpr
+	const std::vector<duration_t>& get_all_laps() const
+	```
+
+10. Get the total elapsed time for the stopwatch
+
+	```cpp
+	[[nodiscard]] constexpr duration_t elapsed() const
+	```
+
+11. Get the total elapsed time from the start to a given lap (the sum of laps `[0, lap_number)`)
+
+	```cpp
+	[[nodiscard]] constexpr
+	duration_t elapsed_to_lap(const std::size_t lap_number) const
+	```
+
+12. Get the total elapsed time from a given lap thru the last lap (the sum of laps `[ lap_number, number_of_laps() )`)
+
+	```cpp
+	[[nodiscard]] constexpr
+	duration_t elapsed_since_lap(const std::size_t lap_number) const
+	```
+13. Get a structure containing statistics calculated from the recorded laps
+
+	```cpp
+	[[nodiscard]] constexpr statistics calculate_statistics() const
+	```
+
+	- the `statistics` structure that's returned is defined as a sub-class of the stopwatch (`generic_stopwatch<T_clock>::statistics`).
+
+		Its constructor takes a `const&` to a vector of sorted lap durations, from which it calculates the statistics.
+
+		```cpp
+		[[nodiscard]] explicit constexpr
+		statistics(const std::vector<duration_t>& sorted_laps) noexcept
+		```
+
+		Notable public members:
+
+		```cpp
+		std::size_t number_of_laps;
+		duration_t total_elapsed;
+		duration_t mean;
+		duration_t median;
+		duration_t min;
+		duration_t max;
+		```
+
+
+`fgl::debug::stopwatch` type alias is defined for convenience as it should be the default usage for the vast majority of platforms that don't feature exotic time keeping mechanisms. (For example: network synchronization signals, high resolution timing cards, atomic clock feeds, etc. In these cases, custom types which meet the requirements of a [trivial clock](https://en.cppreference.com/w/cpp/named_req/TrivialClock) can be used).
+
+```cpp
+using stopwatch = generic_stopwatch<std::chrono::steady_clock>;
+```
+
+**Output & formatter configuration:**
+```cpp
+template <typename T_clock>
+class output_config<generic_stopwatch<T_clock>>
+```
+
+The `generic_stopwatch<T_clock>` specialization of `output_config` satisfies the `fgl::debug::output_handler` concept, which means it acts as both the output channel and formatter for `fgl::debug::generic_stopwatch` synthesized types.
+
+The channel default is enabled and is set to `priority::info`, and is named `"STOPWATCH"`.
+
+`using` alias for the stopwatch type: `using stopwatch_t = generic_stopwatch<T_clock>;`
+
+1. Deleted constructors and destructor. Intended as a static-only (singleton) type which should never be instantiated.
+
+	```cpp
+	output_config(auto&&...) = delete;
+	~output_config() = delete;
+	```
+
+2. The channel interface (satisfies `fgl::debug::output_channel`)
+
+	- `static void turn_on()` to enable the output channel.
+
+	- `static void turn_off()` to disable the output channel.
+
+	- `static bool enabled()` the current enabled state.
+
+	- `static priority get_priority()` the priority, `fgl::debug::priority::info`.
+
+	- `static std::string_view name()` the name of the channel (`"STOPWATCH"`).
+
+3. The customizable `generic_stopwatch<T_clock>::duration_t` formatter
+
+	- The default duration formatter
+
+		```cpp
+		[[nodiscard]] static
+		std::string default_duration_formatter(stopwatch_t::duration_t duration)
+		```
+
+	- A type alias for the duration formatter member
+
+		```cpp
+		using duration_formatter_t =
+			std::function<decltype(default_duration_formatter)>;
+		```
+
+	- The customizable formatter member
+
+		```cpp
+		static inline duration_formatter_t duration_formatter{
+			default_duration_formatter
+		};
+		```
+
+4. The customizable `generic_stopwatch<T_clock>::statistics` formatter
+
+	- The default statistics formatter
+
+		```cpp
+		[[nodiscard]] static std::string default_statistics_formatter(
+			const stopwatch_t::statistics& stats)
+		```
+
+	- A type alias for the statistics formatter member
+
+		```cpp
+		using statistics_formatter_t =
+			std::function<decltype(default_statistics_formatter)>;
+		```
+
+	- The customizable formatter member
+
+		```cpp
+		static inline statistics_formatter_t statistics_formatter{
+			default_statistics_formatter
+		};
+		```
+
+5. The customizable `generic_stopwatch<T_clock>` formatter
+
+	- The default stopwatch formatter
+
+		```cpp
+		[[nodiscard]] static
+		std::string default_stopwatch_formatter(const stopwatch_t& sw)
+		```
+
+	- A type alias for the stopwatch formatter member
+
+		```cpp
+		using stopwatch_formatter_t =
+			std::function<decltype(default_stopwatch_formatter)>;
+		```
+
+	- The customizable formatter member
+
+		```cpp
+		static inline stopwatch_formatter_t stopwatch_formatter{
+			default_stopwatch_formatter
+		};
+		```
+
+6. The formatter interface (satisfies `fgl::debug::output_formatter<fgl::debug::generic_stopwatch<T_clock>>`)
+
+	```cpp
+	[[nodiscard]] static std::string format(const stopwatch_t& sw)
+	```
+
+**String formatting helpers**
+
+Loose functions that wrap calls to `output_config<generic_stopwatch<T_clock>>` formatters; some with some additional formatting.
+
+1. `std::ostream& operator<<` overload (equivalent to `output_config`'s `stopwatch_formatter`)
+
+	```cpp
+	template <typename T_clock>
+	std::ostream& operator<<(std::ostream& os, const generic_stopwatch<T_clock>& sw)
+	```
+
+2. Duration string formatter
+
+	```cpp
+	template <typename T_clock>
+	[[nodiscard]] inline std::string to_string_duration(
+		const typename generic_stopwatch<T_clock>::duration_t duration)
+	```
+
+3. `generic_stopwatch<T_clock>` formatters of varying verbosity.
+
+	1. minimal (equivalent to `output_config`'s `stopwatch_formatter`)
+
+		```cpp
+		template <typename T_clock>
+		[[nodiscard]] inline std::string to_string_minimal(
+			const generic_stopwatch<T_clock>& sw)
+		```
+
+	2. statistics
+
+		```cpp
+		template <typename T_clock>
+		[[nodiscard]] inline std::string to_string_statistics(
+			const generic_stopwatch<T_clock>& sw)
+		```
+
+	3. statistics with enumerated lap durations
+
+		```cpp
+		template <typename T_clock>
+		[[nodiscard]] inline std::string to_string_full(
+			const generic_stopwatch<T_clock>& sw)
+		```
 
 ---
 ## I/O
@@ -1058,7 +2030,11 @@ void f(
 
 Type-based static singleton pattern template.
 
-FGL singletons don't require the the template type to be a typical "singleton-exclusive" object (*Normally, types intended to be used as singletons are exclusively singletons and only have a private constructor and delete the copy and move constructors, along with the assignment operator*). Any type that satisfies [the standard `std::default_initializable` concept](https://en.cppreference.com/w/cpp/concepts/default_initializable) can be used with the singleton template. For example, `fgl::singleton<int>` is a valid singleton whose `instance()` method will return an `int&` to a static `int`.
+**General use of `fgl::singleton` is discouraged**. Prefer `static inline` members and methods with deleted constructors where possible.
+
+However, this will continue to be provided because there are still cases where this singleton template design is desired.
+
+FGL singleton can be used to create a "singleton instance" of a type that wouldn't otherwise be a singleton. It doesn't require the the template type to be a typical "singleton-exclusive" object (*Normally, types intended to be used as singletons are exclusively singletons and only have a private constructor and delete the copy and move constructors, along with the assignment operator*). Any type that satisfies [the standard `std::default_initializable` concept](https://en.cppreference.com/w/cpp/concepts/default_initializable) can be used with the singleton template. For example, `fgl::singleton<int>` is a valid singleton whose `instance()` method will return an `int&` to a static `int`.
 
 - Note: Despite the requirement that `T` satisfy the `std::default_initializable` concept, the singleton template isn't constrained by it due to "incomplete type" issues which would complicate object definitions.
 
@@ -1152,13 +2128,19 @@ Miscellaneous type traits and concepts
 	template <typename T1, typename T2> concept not_same_as
 	```
 
-5. Satisfied when `T` is a pointer to an `fgl::traits::byte_type` or `void`
+5. Satisfied when `T` is a pointer
+
+	```cpp
+	template <typename T> concept pointer_type
+	```
+
+6. Satisfied when `T` is a pointer to an `fgl::traits::byte_type` or `void`
 
 	```cpp
 	template <typename T> concept pointer_to_byte
 	```
 
-6. Satisfied when `T` is a pointer to any type but `void`
+7. Satisfied when `T` is a pointer to any type but `void`
 
 	```cpp
 	template <typename T> concept pointer_to_non_void
@@ -1218,6 +2200,228 @@ Optimized bitwise functions
 	[[nodiscard]] constexpr inline
 	T_out count_unset_bits(const std::unsigned_integral auto bits) noexcept
 	```
+
+---
+### Circular iterator
+`#include <fgl/utility/circular_iterator.hpp>`
+
+A random access iterator which models a circular range via wrap-around behavior. By definiton, this iterator can never go out of bounds (but it can still be invalidated). A circular iterator can be indexed beyond the size of the underlying range in both positive and negative directions to traverse forwards or backwards around the circle.
+
+For example, given a range that has `N` elements, if a circular iterator to the `0`th element is created and the iterator is incremented `N` times, its state will be identical to when it was initialized; aliasing the `0`th element. If the iterator is indexed to the `N+1`th element, it will alias the second element, equivalent to index `1`. If a circular iterator is created to the begining of a range and decremented once, it will alias the `end - 1`th element of the range. And so on.
+
+Due to this circular nature, `iter < iter + 1` may return `false` if `iter + 1` wraps around the end of the range. The reverse holds true for subtraction.
+
+**Quickstart**
+
+```cpp
+std::array<int, 10> r;
+
+fgl::circular_iterator iter(r.begin(), r.end());
+fgl::circular_iterator iter(r.begin(), r.end(), r.begin() + 3);
+fgl::circular_iterator iter(r);
+fgl::circular_iterator iter(r, r.begin() + 3);
+
+*iter;
+&*(iter -= 1) == &r.back();
+&*(iter += 1) == &r.front();
+iter[r.size() * 3]; // OK
+
+auto x = iter;
+auto y = iter + 2;
+x - y == 8
+y - x == 2
+```
+
+**Example program**
+
+```cpp
+#include <cassert>
+#include <array>
+#include <iostream>
+#include <fgl/utility/circular_iterator.hpp>
+
+int main()
+{
+	std::array<int, 5> arr{};
+	auto alias{ fgl::make_circular_range_alias(arr) };
+	assert(
+		alias.begin()
+		== fgl::circular_iterator(arr.begin(), arr.end(), arr.begin())
+	);
+
+	for (int counter{}; auto& elem : alias)
+	{
+		if (counter == 100)
+			break;
+
+		elem = counter++;
+	}
+
+	for (const int elem : arr)
+		std::cout << elem << ", ";
+	std::cout << std::endl;
+}
+```
+**Example program output**
+
+```
+95, 96, 97, 98, 99,
+```
+
+**Interface** `namespace fgl`
+
+```cpp
+template <std::random_access_iterator T_iter>
+class circular_iterator
+```
+
+Member type aliases:
+```cpp
+using difference_type = std::iter_difference_t<T_iter>;
+using value_type = std::iter_value_t<T_iter>;
+using reference_type = std::iter_reference_t<T_iter>;
+using iterator_category = std::random_access_iterator_tag;
+```
+
+Constructors:
+
+note `cursor` is the current position within the `[begin, end)` range. If no `cursor` is provided, the default cursor is `begin`.
+
+```cpp
+[[nodiscard]] constexpr explicit circular_iterator() = default;
+```
+
+```cpp
+[[nodiscard]] constexpr explicit
+circular_iterator(T_iter begin, T_iter end, T_iter cursor)
+```
+
+```cpp
+[[nodiscard]] constexpr explicit
+circular_iterator(T_iter begin, T_iter end)
+```
+
+```cpp
+[[nodiscard]] constexpr explicit
+circular_iterator(
+	std::ranges::random_access_range auto& range,
+	T_iter cursor)
+```
+
+```cpp
+[[nodiscard]] constexpr explicit
+circular_iterator(std::ranges::random_access_range auto& range)
+```
+
+There's also a helper function which constructs an infinite circular range alias (`std::subrange<circular_iterator<>, std::unreachable_sentinel_t>`) from a random access range.
+
+```cpp
+[[nodiscard]] constexpr
+auto make_circular_range_alias(std::ranges::random_access_range auto& range)
+```
+
+Notable public methods:
+
+- Range and cursor getters. This also means that a `circular_iterator` satisfies the `random_access_range` and `common_range` concepts.
+
+	```cpp
+	[[nodiscard]] constexpr T_iter begin() const noexcept
+	```
+	```cpp
+	[[nodiscard]] constexpr T_iter end() const noexcept
+	```
+	```cpp
+	[[nodiscard]] constexpr T_iter cursor() const noexcept
+	```
+
+- All the usual iterator arithmetic operators. It's worth noting that, due to its circular nature, `iter1 - iter2` and `iter2 - iter1` will both result in positive values. By definition, it's impossible for a circular iterator to go out of bounds (though, it can still be invalidated).
+
+	1. Subtraction
+
+		```cpp
+		[[nodiscard]] constexpr
+		difference_type operator-(const circular_iterator& rhs) const noexcept
+		```
+		```cpp
+		[[nodiscard]] constexpr
+		circular_iterator operator-(const difference_type n) const noexcept
+		```
+		```cpp
+		constexpr circular_iterator& operator-=(const difference_type n) noexcept
+		```
+		```cpp
+		constexpr circular_iterator& operator--() noexcept
+		```
+		```cpp
+		[[nodiscard]] constexpr circular_iterator operator--(int) noexcept
+		```
+
+	2. Addition
+
+		```cpp
+		[[nodiscard]] constexpr
+		circular_iterator operator+(const circular_iterator& rhs) const noexcept
+		```
+		```cpp
+		[[nodiscard]] constexpr
+		circular_iterator operator+(const difference_type n) const noexcept
+		```
+		```cpp
+		constexpr circular_iterator& operator+=(const difference_type n) noexcept
+		```
+		```cpp
+		constexpr circular_iterator& operator++() noexcept
+		```
+		```cpp
+		[[nodiscard]] constexpr circular_iterator operator++(int) noexcept
+		```
+
+		- Along with the non-member operator overload:
+
+			```cpp
+			template <std::random_access_iterator T_iter>
+			[[nodiscard]] constexpr circular_iterator<T_iter> operator+(
+				const typename circular_iterator<T_iter>::difference_type n,
+				const circular_iterator<T_iter>& iter) noexcept
+			```
+
+- Access operators
+
+	1. Dereference operator
+
+		```cpp
+		[[nodiscard]] constexpr reference_type operator*() noexcept
+		```
+		```cpp
+		[[nodiscard]] constexpr const reference_type operator*() const noexcept
+		```
+
+	2. Array subscript / index operator. All indexes are valid, including both positive and negative values which are greater than the size of the range.
+
+		```cpp
+		[[nodiscard]] constexpr
+		reference_type operator[](const difference_type index) noexcept
+		```
+		```cpp
+		[[nodiscard]] constexpr
+		const reference_type operator[](const difference_type index) const noexcept
+		```
+
+- Comparison operators
+
+	```cpp
+	[[nodiscard]] constexpr
+	bool operator==(const circular_iterator& rhs) const noexcept
+	```
+	```cpp
+	[[nodiscard]] constexpr
+	bool operator<(const circular_iterator& rhs) const noexcept
+	```
+	```cpp
+	[[nodiscard]] constexpr
+	auto operator<=>(const circular_iterator&) const noexcept = default;
+	```
+
 
 ---
 ### Enumerate
@@ -1285,6 +2489,754 @@ vec[3] == 3.14
 	```
 
 ---
+### Linear matrix alias
+
+`#include <fgl/utility/linear_matrix_alias.hpp>`
+
+Treat a linear contiguous range as if it were multi-dimensional. Support for both row major and column major.
+
+Includes the following headers:
+
+- [Underlying utilities](#linear-matrix-alias-utilities)
+
+	`#include <fgl/utility/linear_matrix_alias/utilities.hpp>`
+
+- [Static alias abstraction](#linear-matrix-alias-static-alias)
+
+	`#include <fgl/utility/linear_matrix_alias/static.hpp>`
+
+- [Dynamic alias abstraction](#linear-matrix-alias-dynamic-alias)
+
+	`#include <fgl/utility/linear_matrix_alias/dynamic.hpp>`
+
+The `static_linear_matrix_alias` provides optimal time *and* space performance when the major and size of the dimensions are constant and known at compile-time. `dynamic_linear_matrix_alias` allows the major and dimensional sizes to be set and modified at runtime. In both abstractions, the number of dimensions must be known at compile-time. The underlying `namespace fgl::linear_matrix_utilities` functions could be used for a flexible number of dimensions, but no abstraction is provided.
+
+**Quickstart**
+
+factory `fgl::make_matrix_alias`
+
+Static:
+```cpp
+using enum fgl::major;
+auto alias{ fgl::make_matrix_alias<x,y,z>(arg) }; // row by default
+auto alias{ fgl::make_matrix_alias<row, x,y,z>(arg) };
+auto alias{ fgl::make_matrix_alias<column, x,y,z>(arg) };
+```
+
+Dynamic:
+```cpp
+using enum fgl::major;
+auto alias{ fgl::make_matrix_alias(arg, x, y, z) }; // row by default
+auto alias{ fgl::make_matrix_alias(arg, row, x, y, z) };
+auto alias{ fgl::make_matrix_alias(arg, column, x, y, z) };
+```
+
+`arg` can be either a contiguous iterator or range. If it's a range, it is bounds-checked and the size of the range must equal the product of the bounds (`x*y*z` for this example).
+
+Using the alias:
+```cpp
+int counter{};
+for (std::size_t i{}; i < x; ++i)
+for (std::size_t j{}; j < y; ++j)
+for (std::size_t l{}; l < z; ++l)
+{
+	alias.at({i,j,l}) = counter; // bounds-checked, may throw
+	alias[{i,j,l}] = counter; // not bounds-checked
+	++counter;
+}
+```
+
+For both static and dynamic, the underlying iterator can be changed after construction
+```cpp
+// only bounds-checked if arg is a range
+alias.set_iterator(arg);
+```
+
+If the alias is dynamic, the bounds and major can be changed at runtime.
+```cpp
+// change major
+alias.switch_major(); // toggles between row and column
+alias.set_major(major);
+
+// change bounds
+alias.set_bounds(bounds); // not bounds-checked
+
+// change iterator and bounds (and optionally major)
+// these are only bounds-checked if arg is a range
+alias.update(arg, bounds);
+alias.update (arg, bounds, major);
+```
+
+#### Linear matrix alias - Utilities
+
+`#include <fgl/utility/linear_matrix_alias/utilities.hpp>`
+
+**Quickstart**
+
+```cpp
+// need two ranges to contain the bounds and dimensional offsets
+constexpr std::size_t dims{ 4 };
+std::array<std::size_t, dims> bounds{3,3,3,3}; // tesseract (4D cube)
+
+// calculate dimensional offsets
+std::array<std::size_t, dims> offsets{};
+calculate_offsets<dims, fgl::major::row>(bounds, offsets);
+// or
+auto offsets{ make_offsets<dims>(bounds) };
+
+buffer[matrix_to_linear(std::array{0,2,2,0}, offsets)] = 1337;
+```
+
+"bounds" and "offsets" ranges must always be the same length.
+
+For compile-time optimizations at the cost of synthesizing more templates, provide the number of dimensions as a template parameter `T_dimensions` which must either be `0` or match the length of the range(s).
+
+**Example program**
+```cpp
+#include <cstddef> // size_t
+#include <iostream> // cout, endl
+#include <iomanip> // setw
+#include <array>
+#include <vector>
+
+#include <fgl/utility/linear_matrix_alias/utilities.hpp>
+
+void fill_buffer(auto& buffer)
+{
+	for (std::size_t i{}; auto& v : buffer)
+		v = i++;
+}
+
+void print_2d_matrix(
+	const auto& buffer, const auto& bounds, const auto& offsets)
+{
+	using fgl::linear_matrix_utilities::matrix_to_linear;
+	for (std::size_t i{}; i < bounds[0]; ++i)
+	{
+		for (std::size_t j{}; j < bounds[1]; ++j)
+		{
+			std::cout
+				<< std::setw(3)
+				<< buffer[matrix_to_linear(std::array{i,j}, offsets)]
+				<< ", ";
+		}
+		std::cout << '\n';
+	}
+	std::cout << std::endl;
+}
+
+void print_2d_matrix_both_majors(const auto& buffer, const auto& bounds)
+{
+	std::vector<std::size_t> offsets(bounds.size());
+
+	using fgl::linear_matrix_utilities::calculate_offsets;
+
+	std::cout << "row major:\n";
+	calculate_offsets<0, fgl::major::row>(bounds, offsets);
+	print_2d_matrix(buffer, bounds, offsets);
+
+	std::cout << "column major:\n";
+	calculate_offsets<0, fgl::major::column>(bounds, offsets);
+	print_2d_matrix(buffer, bounds, offsets);
+}
+
+int main()
+{
+	std::vector<std::size_t> bounds{3,3}; // 2D square, 3x3
+	std::vector<std::size_t> buffer(3*3);
+
+	fill_buffer(buffer);
+	print_2d_matrix_both_majors(buffer, bounds);
+
+	// resize square 3x3 -> 4x4
+	bounds[0] = 4; bounds[1] = 4;
+	buffer.resize(4*4);
+
+	fill_buffer(buffer);
+	print_2d_matrix_both_majors(buffer, bounds);
+}
+```
+**Example program output**
+```
+row major:
+  0,   1,   2,
+  3,   4,   5,
+  6,   7,   8,
+
+column major:
+  0,   3,   6,
+  1,   4,   7,
+  2,   5,   8,
+```
+
+**Interface**
+
+`namespace fgl`
+
+1. an `enum class` used to specify the major
+
+	- `fgl::major::row`
+
+	- `fgl::major::column`
+
+`namespace fgl::linear_matrix_utilities`
+
+1. An assertion-helper function which is largely (or entirely) optimized away when `NDEBUG` is defined.
+
+	Asserts that the ranges are of equal size, and then returns that size. If `T_dimensions` is `0`, asserts that the sizes of `a` and `b` are the same and returns the size. Otherwise, asserts the sizes of `a` and `b` are `T_dimensions`, and then returns `T_dimensions`.
+
+	```cpp
+	template <std::size_t T_dimensions = 0>
+	[[nodiscard]] constexpr inline std::size_t assert_dimensions(
+		const std::ranges::sized_range auto& a,
+		const std::ranges::sized_range auto& b)
+	noexcept
+	```
+2. Convert dimensional indexes using offsets to produce a `T_out` linear index.
+
+	The `std::ranges::size` of `indexes` and `offsets` must be the same. `T_dimensions` must be either equal the size of each range, or `0` in which
+case the number of dimensions will be dynamically determined by the sizes.
+
+	```cpp
+	template <std::size_t T_dimensions = 0, std::integral T_out = std::size_t>
+	[[nodiscard]] constexpr inline T_out matrix_to_linear(
+		const fgl::contiguous_range_convertible_to<T_out> auto& indexes,
+		const fgl::contiguous_range_convertible_to<T_out> auto& offsets)
+	noexcept
+	```
+
+3. Calculates and assigns dimensional offsets for the `T_major` of `bounds`.
+
+	The `std::ranges::size` of `bounds` and `out_offsets` must be the same. `T_dimensions` must be either equal the size of each range, or `0` in which case the number of dimensions will be dynamically determined by the sizes.
+
+	```cpp
+	template
+	<
+		std::size_t T_dimensions = 0,
+		major T_major = major::row,
+		fgl::random_access_range_integral T_bounds,
+		fgl::random_access_range_assignable_from_range<T_bounds> T_offsets
+	>
+	constexpr inline void calculate_offsets(
+		const T_bounds& bounds,
+		T_offsets& out_offsets)
+	noexcept
+	```
+
+	- Helper function: returns a `std::array<T_out, T_dimensions>` containing dimensional offsets for the `T_major` of `bounds`. `T_dimensions` must equal the size of `bounds`.
+
+		```cpp
+		template
+		<
+			std::size_t T_dimensions,
+			major T_major = major::row,
+			typename T_out = std::size_t
+		>
+		[[nodiscard]] constexpr inline std::array<T_out, T_dimensions> make_offsets(
+			const fgl::contiguous_range_integral auto& bounds)
+		noexcept
+		```
+
+4. Returns `true` if any index is greater than or equal to its corresponding bound, otherwise `false`.
+	```cpp
+	template <std::size_t T_dimensions = 0>
+	constexpr inline bool out_of_bounds(
+		const fgl::contiguous_range_integral auto& indexes,
+		const fgl::contiguous_range_integral auto& bounds)
+	noexcept
+	```
+
+	- Helper function: throws `std::out_of_range` if any index is out of bounds
+
+		```cpp
+		template <std::size_t T_dimensions = 0>
+		constexpr inline void check_index_bounds(
+			const fgl::contiguous_range_integral auto& indexes,
+			const fgl::contiguous_range_integral auto& bounds)
+		```
+
+#### Linear matrix alias - Static alias
+
+`#include <fgl/utility/linear_matrix_alias/static.hpp>`
+
+A matrix alias with compile-time constant dimensions, major, and bounds.
+
+**Example program**
+```cpp
+#include <cstddef> // size_t
+#include <iostream> // cout, endl
+#include <array>
+
+#include <fgl/utility/linear_matrix_alias/static.hpp>
+
+int main()
+{
+	constexpr std::size_t x{3}, y{3}, z{3};
+	std::array<short, x*y*z> buffer;
+	for (short i{}; auto& v : buffer)
+		v = i++; // fill buffer
+
+	using enum fgl::major;
+	auto alias_row{ fgl::make_matrix_alias<row, x,y,z>(buffer) };
+	auto alias_column{ fgl::make_matrix_alias<column, x,y,z>(buffer) };
+
+	/// equivalent to:
+	// using iter_t = decltype(buffer.begin());
+	// fgl::static_linear_matrix_alias<iter_t, row, x,y,z> alias_row(buffer);
+	// fgl::static_linear_matrix_alias<iter_t, column, x,y,z> alias_column(buffer);
+
+
+	std::cout << "row major: ";
+	for (std::size_t i{}; i < x; ++i)
+	for (std::size_t j{}; j < y; ++j)
+	for (std::size_t l{}; l < z; ++l)
+	{
+		std::cout << alias_row[{i, j, l}] << ", ";
+	}
+
+	std::cout << "\ncolumn major: ";
+	for (std::size_t i{}; i < x; ++i)
+	for (std::size_t j{}; j < y; ++j)
+	for (std::size_t l{}; l < z; ++l)
+	{
+		std::cout << alias_column[{i, j, l}] << ", ";
+	}
+	std::cout << std::endl;
+}
+
+```
+**Example program output**
+```cpp
+row major: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+
+column major: 0, 9, 18, 3, 12, 21, 6, 15, 24, 1, 10, 19, 4, 13, 22, 7, 16, 25, 2, 11, 20, 5, 14, 23, 8, 17, 26,
+```
+
+**Interface** `namespace fgl`
+
+- **The static linear matrix alias abstraction.**
+
+	A multi-dimensional alias to a contiguous range with template major, dimensions, and bounds, which enables optimizations and compile-time calculation of offsets.
+
+	```cpp
+	template
+	<
+		std::contiguous_iterator T_iter,
+		major T_major,
+		std::size_t ... T_bounds
+	>
+	class static_linear_matrix_alias
+	```
+
+	Factories:
+
+	If no `T_major` is specified, it defaults to `fgl::major::row`.
+
+	1. Created from an iterator (not bounds-checked).
+
+		```cpp
+		template <std::convertible_to<std::size_t> auto ... T_bounds>
+		[[nodiscard]] constexpr auto make_matrix_alias(std::contiguous_iterator auto iter) noexcept
+		```
+
+		```cpp
+		template <major T_major, std::convertible_to<std::size_t> auto ... T_bounds>
+		[[nodiscard]] constexpr auto make_matrix_alias(std::contiguous_iterator auto iter) noexcept
+		```
+
+	2. Created from a contiguous range. If the size of the range does not equal the product of the dimensional bounds, a `std::invalid_argument` exception will be thrown.
+
+		```cpp
+		template <std::convertible_to<std::size_t> auto ... T_bounds>
+		[[nodiscard]] constexpr auto make_matrix_alias(std::ranges::contiguous_range auto& range)
+		```
+
+		```cpp
+		template <major T_major, std::convertible_to<std::size_t> auto ... T_bounds>
+		[[nodiscard]] constexpr auto make_matrix_alias(std::ranges::contiguous_range auto& range)
+		```
+
+
+	Constructors:
+
+	1. Constructed from a `T_iter` iterator; no bounds-checking.
+
+		```cpp
+		[[nodiscard]] explicit constexpr
+		static_linear_matrix_alias(T_iter iter) noexcept
+		```
+
+	2. Constructed from a `std::ranges::contiguous_range` whose size must equal the product of the dimensional bounds, otherwise a `std::invalid_argument` exception will be thrown.
+
+		```cpp
+		[[nodiscard]] explicit constexpr
+		static_linear_matrix_alias(std::ranges::contiguous_range auto& range)
+		```
+
+
+	Type aliases:
+
+	1. `array_t` is a `std::array` of `size_t` whose count is determined by the number of dimensions.
+
+	2. `difference_type` is the same as `std::iter_difference_t<T_iter>`
+
+	Methods:
+
+	1. Return the number of dimensions
+		```cpp
+		[[nodiscard]] static constexpr std::size_t dimensions() noexcept
+		```
+
+	2. Return a constant reference to the bounds
+		```cpp
+		[[nodiscard]] static constexpr const array_t& bounds() noexcept
+		```
+
+	3. Return a constant reference to the calculated offsets
+		```cpp
+		[[nodiscard]] static constexpr const array_t& offsets() noexcept
+		```
+
+	4. Return the `major` of the alias
+		```cpp
+		[[nodiscard]] static constexpr major get_major() noexcept
+		```
+		helper methods
+		- `[[nodiscard]] static constexpr bool is_row_major() noexcept`
+		- `[[nodiscard]] static constexpr bool is_column_major() noexcept`
+
+	5. Returns a copy of the underyling iterator
+		```cpp
+		[[nodiscard]] constexpr auto iterator() const
+		```
+
+	6. Changes the underlying iterator
+
+		- not bounds-checked
+		```cpp
+		constexpr void set_iterator(T_iter iter) noexcept
+		```
+		- bounds-checked
+		```cpp
+		template <std::ranges::contiguous_range T_range>
+		requires std::same_as<std::ranges::iterator_t<T_range>, T_iter>
+		constexpr void set_iterator(T_range& range)
+		```
+
+	7. Translates multi-dimensional indexes into the linear index for the underlying iterator
+
+		```cpp
+		[[nodiscard]] static constexpr difference_type convert_indexes(const array_t& indexes) noexcept
+		```
+
+	8. Unchecked indexing
+
+		```cpp
+		[[nodiscard]] constexpr auto& operator[](const array_t& indexes)
+		```
+
+		```cpp
+		[[nodiscard]] constexpr const auto& operator[](const array_t& indexes) const
+		```
+
+	9. Bounds-checked indexing which throws if an index matches or exceeds its corresponding bound.
+
+		```cpp
+		[[nodiscard]] constexpr auto& at(const array_t& indexes)
+		```
+
+		```cpp
+		[[nodiscard]] constexpr const auto& at(const array_t& indexes) const
+		```
+
+- **A static implementation helper class** which contains the information that's required for a static alias. The number of `dimensions` is determined by the `sizeof...(T_bounds)`.
+
+	***While this is provided as a public interface for reusability reasons***, there's no need to interact with this structure directly if all you want is a `static_linear_matrix_alias`.
+
+	```cpp
+	template <major T_major, std::size_t ... T_bounds>
+	struct static_linear_matrix_info
+	```
+
+	Type aliases:
+
+	1. `using array_t = std::array<std::size_t, dimensions>;`
+
+	Data members:
+
+	1. `static constexpr std::size_t dimensions`
+	2. `static constexpr array_t bounds`
+	3. `static constexpr array_t offsets`
+
+	Methods:
+
+	1.	Returns `true` if any index matches or exceeds its corresponding bound, otherwise `false`
+		```cpp
+		[[nodiscard]] static constexpr bool out_of_bounds(const array_t& indexes)
+		```
+
+	2. throws if any index matches or exceeds its corresponding bound.
+		```cpp
+		static constexpr void check_bounds(const array_t& indexes)
+		```
+
+	3. translates multi-dimensional indexes to a linear index using `offsets`.
+		```cpp
+		template <std::integral T_out = std::ptrdiff_t>
+		[[nodiscard]] static constexpr
+		T_out convert_indexes(const array_t& indexes) noexcept
+		```
+
+#### Linear matrix alias - Dynamic alias
+
+`#include <fgl/utility/linear_matrix_alias/dynamic.hpp>`
+
+A matrix alias with runtime major and bounds, but the number of dimensions is a compile-time constant.
+
+**Example program**
+```cpp
+#include <cstddef> // size_t
+#include <iostream> // cout, endl
+#include <vector>
+
+#include <fgl/utility/linear_matrix_alias/dynamic.hpp>
+
+int main()
+{
+	std::size_t x{ 3 }, y{ 3 }, z{ 3 };
+	std::vector<short> buffer;
+	buffer.resize(x*y*z);
+	for (short i{}; auto& v : buffer)
+		v = i++; // fill buffer
+
+	using enum fgl::major;
+	auto alias{ fgl::make_matrix_alias(buffer, row, x,y,z) };
+
+	std::cout << "row major " << x << 'x' << y << 'x' << z << ":\n";
+	for (std::size_t i{}; i < x; ++i)
+	for (std::size_t j{}; j < y; ++j)
+	for (std::size_t l{}; l < z; ++l)
+	{
+		std::cout << alias[{i, j, l}] << ", ";
+	}
+
+	++x, ++y, ++z;
+	buffer.resize(x*y*z);
+	for (short i{}; auto& v : buffer)
+		v = i++; // fill buffer
+
+	alias.update(buffer, {x,y,z}, column);
+
+	std::cout << "\n\ncolumn major " << x << 'x' << y << 'x' << z << ":\n";
+	for (std::size_t i{}; i < x; ++i)
+	for (std::size_t j{}; j < y; ++j)
+	for (std::size_t l{}; l < z; ++l)
+	{
+		std::cout << alias[{i, j, l}] << ", ";
+	}
+	std::cout << std::endl;
+}
+```
+**Example program output**
+```cpp
+row major 3x3x3:
+0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+
+column major 4x4x4:
+0, 16, 32, 48, 4, 20, 36, 52, 8, 24, 40, 56, 12, 28, 44, 60, 1, 17, 33, 49, 5, 21, 37, 53, 9, 25, 41, 57, 13, 29, 45, 61, 2, 18, 34, 50, 6, 22, 38, 54, 10, 26, 42, 58, 14, 30, 46, 62, 3, 19, 35, 51, 7, 23, 39, 55, 11, 27, 43, 59, 15, 31, 47, 63,
+```
+
+**Interface** `namespace fgl`
+
+A multi-dimensional alias to a contiguous range with runtime mutable major and bounds. The number of dimensions is a compile-time constant.
+
+```cpp
+template <std::contiguous_iterator T_iter, std::size_t T_dimensions>
+class dynamic_linear_matrix_alias
+```
+
+Factories:
+
+If no `T_major` is specified, it defaults to `fgl::major::row`.
+
+1. Created from an iterator (not bounds-checked).
+
+	```cpp
+	[[nodiscard]] constexpr inline auto make_matrix_alias(
+		std::contiguous_iterator auto iter,
+		const std::convertible_to<std::size_t> auto ... bounds)
+	noexcept
+	```
+
+	```cpp
+	[[nodiscard]] constexpr inline auto make_matrix_alias(
+		std::contiguous_iterator auto iter,
+		const major major,
+		const std::convertible_to<std::size_t> auto ... bounds)
+	noexcept
+	```
+
+2. Created from a contiguous range. If the size of the range does not equal the product of the dimensional bounds, a `std::invalid_argument` exception will be thrown.
+
+	```cpp
+	[[nodiscard]] constexpr inline auto make_matrix_alias(
+		std::ranges::contiguous_range auto& range,
+		const std::convertible_to<std::size_t> auto ... bounds)
+	```
+
+	```cpp
+	[[nodiscard]] constexpr inline auto make_matrix_alias(
+		std::ranges::contiguous_range auto& range,
+		const major major,
+		const std::convertible_to<std::size_t> auto ... bounds)
+	```
+
+Constructors:
+
+1. Constructed from a `T_iter` iterator; no bounds-checking.
+
+	```cpp
+	[[nodiscard]] explicit constexpr dynamic_linear_matrix_alias(
+		T_iter iter,
+		const array_t& bounds,
+		const major major = major::row)
+	noexcept
+	```
+
+2. Constructed from a `std::ranges::contiguous_range` whose size must equal the product of the dimensional bounds, otherwise a `std::invalid_argument` exception will be thrown.
+
+	```cpp
+	[[nodiscard]] explicit constexpr dynamic_linear_matrix_alias(
+		std::ranges::contiguous_range auto& range,
+		const array_t& bounds,
+		const major major = major::row)
+	```
+
+Type aliases:
+
+1. `array_t` is a `std::array` of `size_t` whose count is determined by the number of dimensions.
+
+2. `difference_type` is the same as `std::iter_difference_t<T_iter>`
+
+Methods:
+
+1. Return the number of dimensions
+	```cpp
+	[[nodiscard]] constexpr std::size_t dimensions() const noexcept
+	```
+
+2. Return a constant reference to the bounds
+	```cpp
+	[[nodiscard]] constexpr const array_t& bounds() const noexcept
+	```
+
+3. Changes the bounds of the alias and and recalculates the dimensional offsets. Not bounds-checked.
+
+	```cpp
+	constexpr void set_bounds(const array_t& bounds) noexcept
+	```
+
+4. Return a constant reference to the calculated offsets
+	```cpp
+	[[nodiscard]] constexpr const array_t& offsets() const noexcept
+	```
+
+5. Return the major of the alias
+	```cpp
+	[[nodiscard]] constexpr major get_major() const noexcept
+	```
+	helper methods
+	- `[[nodiscard]] constexpr bool is_row_major() const noexcept`
+	- `[[nodiscard]] constexpr bool is_column_major() const noexcept`
+
+6. Changes `major` of the alias and recalculates offsets.
+
+	- explicitly set the alias major
+	```cpp
+	constexpr void set_major(const fgl::major new_major) noexcept
+	```
+
+	- toggle between majors (note: this still performs an offset recalculation every time)
+	```cpp
+	constexpr void switch_major() noexcept
+	```
+
+7. Returns a copy of the underyling iterator
+	```cpp
+	[[nodiscard]] constexpr auto iterator() const noexcept
+	```
+
+8. Changes the underlying iterator.
+
+	- not bounds-checked
+	```cpp
+	constexpr void set_iterator(T_iter iter) noexcept
+	```
+
+	- bounds-checked. The size of the range must equal the product of the dimensional bounds, otherwise a `std::invalid_argument` exception will be thrown.
+	```cpp
+	template <std::ranges::contiguous_range T_range>
+	requires std::same_as<std::ranges::iterator_t<T_range>, T_iter>
+	constexpr void set_iterator(T_range& range)
+	```
+
+9. Simultaneously changes the iterator, bounds, and (optionally) major.
+
+	- Not bounds-checked
+	```cpp
+	constexpr void update(T_iter iter, const array_t& bounds) noexcept
+	```
+
+	```cpp
+	constexpr void update(
+		T_iter iter,
+		const array_t& bounds,
+		const fgl::major new_major) noexcept
+	```
+
+	- Bounds-checked. The size of the range must equal the product of the dimensional bounds, otherwise a `std::invalid_argument` exception will be thrown.
+	```cpp
+	template <std::ranges::contiguous_range T_range>
+	requires std::same_as<std::ranges::iterator_t<T_range>, T_iter>
+	constexpr void update(T_range& range, const array_t& bounds)
+	```
+
+	```cpp
+	template <std::ranges::contiguous_range T_range>
+	requires std::same_as<std::ranges::iterator_t<T_range>, T_iter>
+	constexpr void update(
+		T_range& range,
+		const array_t& bounds,
+		const fgl::major new_major)
+	```
+
+10. Translates multi-dimensional indexes into the linear index for the underlying iterator
+
+	```cpp
+	[[nodiscard]] constexpr
+	difference_type convert_indexes(const array_t& indexes) const noexcept
+	```
+
+11. Unchecked indexing
+
+	```cpp
+	[[nodiscard]] constexpr auto& operator[](const array_t& indexes)
+	```
+
+	```cpp
+	[[nodiscard]] constexpr const auto& operator[](const array_t& indexes) const
+	```
+
+12. Bounds-checked indexing which throws if an index matches or exceeds its corresponding bound.
+
+	```cpp
+	[[nodiscard]] constexpr auto& at(const array_t& indexes)
+	```
+
+	```cpp
+	[[nodiscard]] constexpr const auto& at(const array_t& indexes) const
+
+---
 ### Make byte array
 `#include <fgl/utility/make_byte_array.hpp>`
 
@@ -1334,6 +3286,122 @@ int main()
 
 	```cpp
 	consteval auto operator"" _bytes()
+	```
+
+---
+### Matrix
+`#include <fgl/utility/matrix.hpp>`
+
+A multi-dimensional row-major array; not a mathematical matrix. Combines the behavior of a [static linear matrix alias](#linear-matrix-alias-static-alias) with a `std::array`.
+
+**Quickstart**
+Inherets `std::array` and it's interface.
+```cpp
+fgl::matrix<int, x,y,z,w> matrix;
+matrix[{0,0,0,0}] = 0;
+matrix.at({0,0,0,0}) = 0;
+
+matrix.linear_index(0) = 0;
+matrix.linear_at(0) = 0;
+
+std::array<int, x*y*z*w>& array{ matrix.linear_array() };
+```
+**Example program**
+```cpp
+#include <cstddef> // size_t
+#include <iostream> // cout, endl
+#include <iomanip> // setw
+
+#include <fgl/utility/matrix.hpp>
+
+int main()
+{
+	constexpr std::size_t x{ 5 }, y{ 5 };
+	fgl::matrix<short, x, y> matrix;
+
+	for (short i{}; auto& v : matrix) // using std::array's begin/end
+		v = i++; // fill matrix (row major)
+
+	std::cout << "Matrix " << x << 'x' << y << ":\n";
+	for (std::size_t i{}; i < x; ++i)
+	{
+		for (std::size_t j{}; j < y; ++j)
+		{
+			std::cout << std::setw(3) << matrix[{i, j}] << ", ";
+		}
+		std::cout << std::endl;
+	}
+}
+```
+**Example program output**
+```
+Matrix 5x5:
+  0,   1,   2,   3,   4,
+  5,   6,   7,   8,   9,
+ 10,  11,  12,  13,  14,
+ 15,  16,  17,  18,  19,
+ 20,  21,  22,  23,  24,
+```
+
+**Interface** `namespace fgl`]
+
+Linear `std::array` aggrigate initialization only. No constructors.
+
+Type aliases:
+
+1. `dimensional_t` is a `std::array` of `std::size_t` whose size is equal to the number of dimensions.
+
+2. `base_t` is the underlying (inhereted) linear `std::array`
+
+Methods:
+
+1. returns a reference to the underlying linear array. Equvalent to `static_cast<base_t&>(matrix)`.
+	```cpp
+	[[nodiscard]] constexpr const base_t& linear_array() const noexcept
+	```
+
+	```cpp
+	[[nodiscard]] constexpr const base_t& linear_array() const noexcept
+	```
+
+2. Unchecked index into the linear `std::array` via its `operator[]`
+
+	```cpp
+	[[nodiscard]] constexpr auto& linear_index(const std::size_t index)
+	```
+
+	```cpp
+	[[nodiscard]] constexpr const auto& linear_index(const std::size_t index) const
+	```
+
+3. Bounds-checked index into the linear `std::array` via its `at()` method
+
+	```cpp
+	[[nodiscard]] constexpr auto& linear_at(const std::size_t index)
+	```
+
+	```cpp
+	[[nodiscard]] constexpr const auto& linear_at(const std::size_t index) const
+	```
+
+3. Unchecked index into the multi-dimensional matrix
+
+	```cpp
+	[[nodiscard]] constexpr auto& operator[](const dimensional_t& indexes)
+	```
+
+	```cpp
+	[[nodiscard]] constexpr const auto& operator[](const dimensional_t& indexes) const
+	```
+
+4. Bounds-checked index into the multi-dimensional matrix. Will throw `std::out_of_range` if any index matches or exceeds its corresponding dimensional bound.
+
+	```cpp
+	[[nodiscard]] constexpr auto& at(const dimensional_t& indexes)
+	```
+
+	```cpp
+	[[nodiscard]] constexpr const auto& at(const dimensional_t& indexes) const
 	```
 
 ---
@@ -1418,6 +3486,39 @@ Members:
 
 	```cpp
 	[[nodiscard]] T operator()()
+	```
+
+---
+### Sleep
+`#include <fgl/utility/sleep.hpp>`
+
+High resolution, short time scale sleep functions.
+
+**Prefer the use of `std::this_thread::sleep_for` and `std::this_thread::yield` where more appropriate**.
+
+However, there are use cases where this header's functions may be applicable. `nano_sleep` is implemented as a nanosecond resolution hot loop which may be used for sub-`yield` timing (`+~400ns` under ideal conditions). `micro_sleep` is implemented as a microsecond resolution `yield`ing loop which may be used for sub-`sleep_for` timing (`+~3μs` under ideal conditions). The only guarentee is that the functions will return some time after requested duration. The exact delays are subject to the whims of the scheduler, platform, and `std::chrono::steady_clock` implementation.
+
+For accuracy over longer time scales, the standard provided sleep functions can be layered on top of these functions. For example: `sleep_until` or `sleep_for` can be used to bring the required resolution within the appropriate timeframe for `micro_sleep`, which can be used to further reduce the timeframe until `nano_sleep` should take over. With some testing to figure out the ranges for the ideal timeframes, this technique can feisably provide very good sleep accuracy on certain platforms and environments.
+
+**Quickstart**
+
+```cpp
+fgl::nano_sleep(std::chrono::nanoseconds(500)); // hot loop
+fgl::micro_sleep(std::chrono::microseconds(2)); // yielding loop
+```
+
+**Interface** `namespace fgl`
+
+1. A nano-second scale sleep, implemented as a non-`yield`ing hot spin loop
+
+	```cpp
+	inline void nano_sleep(const std::chrono::nanoseconds duration) noexcept
+	```
+
+2. A micro-second scale sleep, implemented as a `yield`ing loop
+
+	```cpp
+	inline void micro_sleep(const std::chrono::microseconds duration) noexcept
 	```
 
 ---

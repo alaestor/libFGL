@@ -1,6 +1,7 @@
 #pragma once
 #ifndef FGL_UTILITY_BINARY_FILES_HPP_INCLUDED
 #define FGL_UTILITY_BINARY_FILES_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
 
 /// QUICK-START GUIDE
 /* Argument syntax: func(required, [optional])

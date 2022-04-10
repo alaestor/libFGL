@@ -13,7 +13,7 @@
 
 int main()
 {
-	static_assert(forward::iterator::tests());
-	constexpr_assert(forward::range::tests());
+	static_assert(forward::iterator::test_passes());
+	constexpr_assert(forward::range::test_passes());
 	return EXIT_SUCCESS;
 }

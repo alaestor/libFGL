@@ -1,6 +1,7 @@
 #pragma once
 #ifndef FGL_TYPES_CBYTE_PTR_WRAPPER_HPP_INCLUDED
 #define FGL_TYPES_CBYTE_PTR_WRAPPER_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
 
 /// QUICK-START GUIDE
 /*

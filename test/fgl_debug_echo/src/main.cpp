@@ -12,7 +12,7 @@
 	#error NDEBUG must not be defined for tests because they rely on assertions
 #endif // NDEBUG
 
-std::string fixme_fmt_out(
+std::string echo_fmt_out(
 	const long long int line,
 	const std::string_view filePath,
 	const std::string_view funcName,
@@ -23,13 +23,11 @@ std::string fixme_fmt_out(
 	return ss.str();
 }
 
-std::string fixme_fmt(
-	const fgl::debug::output::priority_e channel,
+std::string echo_fmt(
 	const std::string_view message,
 	const std::source_location source)
 {
-	assert(channel == fgl::debug::output::priority_e::echo);
-	return fixme_fmt_out(
+	return echo_fmt_out(
 		source.line(),
 		source.file_name(),
 		source.function_name(),
@@ -43,14 +41,14 @@ std::string sfmt(
 	const std::string_view funcName,
 	const std::string_view message = "")
 {
-	return fixme_fmt_out(line, filePath, funcName, message);
+	return echo_fmt_out(line, filePath, funcName, message);
 }
 
 std::string sfmt(
 	const std::string_view message = "",
 	const std::source_location source = std::source_location::current())
 {
-	return fixme_fmt(fgl::debug::output::priority_e::echo, message, source);
+	return echo_fmt(message, source);
 }
 
 std::string result(const auto v)
@@ -63,8 +61,11 @@ std::string result(const auto v)
 int main()
 {
 	std::stringstream sstream;
-	fgl::debug::output::config::instance().change_output_stream(sstream);
-	fgl::debug::echo::config::instance().change_formatter(fixme_fmt);
+	fgl::debug::output::stream(sstream);
+	// unused in current implementation:
+	fgl::debug::output::format_head = [](std::string_view) { return ""; };
+	fgl::debug::output::priority_threshold(fgl::debug::priority::minimum);
+	fgl::debug::output_config<fgl::debug::echo>::formatter = echo_fmt;
 
 	const auto last_output{
 		[&sstream]()
@@ -75,7 +76,6 @@ int main()
 			return s;
 		}
 	};
-
 	ECHO("test"); assert(last_output() == sfmt("test") + '\n');
 
 	ECHOV(1+1); assert(last_output() == sfmt("1+1") + result(2));
@@ -88,6 +88,8 @@ int main()
 		last_output()
 		== sfmt(12,"src/notmain.cpp","void notmain()","20") + result(20)
 	);
+
+	//*/
 
 	return EXIT_SUCCESS;
 }

@@ -10,14 +10,33 @@
 #include <limits>
 
 //#include <fgl/types/ctypes.hpp>
-#include <../../types/traits.hpp> // numeric_type
+#include "../../types/traits.hpp" // numeric_type
 
 namespace fgl {
 
+// pow of an integer and unsigned integer
+template <std::integral T, std::unsigned_integral T_exponent = T>
+[[nodiscard]] constexpr inline T pow(T base, T_exponent exponent)
+{
+	if (exponent == 1) return base;
+
+	T result{ 1 };
+	while (exponent != 0)
+	{
+		if (exponent & 1)
+			result *= base;
+
+		exponent >>= 1;
+		base *= base;
+	}
+
+	return result;
+}
+
 // pow of a numeric base and an integer exponent (works with negatives)
-template <fgl::traits::numeric_type T, std::integral T_exponent>
+template <fgl::traits::numeric_type T, std::integral T_exponent = T>
 [[nodiscard]] constexpr inline
-std::conditional_t<std::floating_point<T>, T, double>
+std::conditional_t<std::floating_point<T>, double, T>
 pow(const T base, const T_exponent exponent)
 {
 	if (exponent == 0) return 1;
@@ -37,25 +56,6 @@ pow(const T base, const T_exponent exponent)
 	return result;
 }
 
-// pow of an integer and unsigned integer
-template <std::integral T, std::unsigned_integral T_exponent>
-[[nodiscard]] constexpr inline T pow(T base, T_exponent exponent)
-{
-	if (exponent == 1) return base;
-
-	T result{ 1 };
-	while (exponent != 0)
-	{
-		if (exponent & 1)
-			result *= base;
-
-		exponent >>= 1;
-		base *= base;
-	}
-
-	return result;
-}
-
 // pow approximation for little-endian IEEE-754 binary64
 template <bool T_improved_precision = true>
 [[nodiscard]] constexpr inline
@@ -70,8 +70,11 @@ double pow_approximation(double base, const double exponent)
 		" The target platform and/or vendor implementation is incompatible."
 	);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfloat-equal"
 	if (exponent == 0) return 1;
 	else if (exponent == 1) return base;
+#pragma GCC diagnostic pop
 
 	using half_t = uint_least32_t;
 	static_assert(sizeof(half_t) == sizeof(decltype(base)) / 2);
@@ -115,7 +118,7 @@ double pow_approximation(double base, const double exponent)
 	}
 }
 
-}
+} // namespace fgl
 
 // std::cout
 // 	<< "\nNormal:"

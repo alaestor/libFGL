@@ -1,6 +1,7 @@
 #pragma once
 #ifndef FGL_UTILITY_ZIP_HPP_INCLUDED
 #define FGL_UTILITY_ZIP_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
 
 /// QUICK-START GUIDE
 /*

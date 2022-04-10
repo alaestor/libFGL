@@ -1,6 +1,7 @@
 #pragma once
 #ifndef FGL_TYPES_RANGE_ALIAS_HPP_INCLUDED
 #define FGL_TYPES_RANGE_ALIAS_HPP_INCLUDED
+#include "../environment/libfgl_compatibility_check.hpp"
 
 /// QUICK-START GUIDE
 /*
@@ -70,8 +71,8 @@ template
 >
 struct range_alias
 {
-	T_begin m_begin;
 	T_end m_end;
+	T_begin m_begin;
 
 	public:
 	constexpr range_alias() = delete;
@@ -79,12 +80,12 @@ struct range_alias
 
 	[[nodiscard]] explicit constexpr
 	range_alias(const T_begin& begin, const T_end& end)
-	: m_begin(begin), m_end(end)
+	: m_end(end), m_begin(begin)
 	{ static_assert(std::ranges::range<range_alias<T_begin, T_end>>); }
 
 	[[nodiscard]] explicit constexpr
 	range_alias(T_begin&& begin, T_end&& end)
-	: m_begin(std::move(begin)), m_end(std::move(end))
+	: m_end(std::move(end)), m_begin(std::move(begin))
 	{ static_assert(std::ranges::range<range_alias<T_begin, T_end>>); }
 
 	[[nodiscard]] constexpr T_begin begin() const noexcept
