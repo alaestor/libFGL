@@ -101,33 +101,57 @@ $(document).ready(function(){initNavTree('page-fgl-about.html',''); initResizabl
   <div class="headertitle"><div class="title">About libFGL fascilities </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="page-fgl-about-compatibility"></a>
-Official Compatibility</h1>
-<p >Refer to <a class="el" href="group__group-environment-libfgl__compatibility__check.html">libFGL Compatibility Check</a> documentation. </p>
-<h1><a class="anchor" id="page-fgl-header"></a>
+<div class="textblock"><h1><a class="anchor" id="page-fgl-header"></a>
 About libFGL Headers</h1>
 <p >The <code><a class="el" href="fgl_8hpp.html" title="libFGL&#39;s &quot;everything&quot; header">fgl.hpp</a></code> header includes the entire libFGL library, excluding experimental headers and libFGL extensions.</p>
-<p >The links provided in this section of the documentation go to pages which reference (which usually correspond to individual headers).</p>
-<p ><code>#include &lt;<a class="el" href="fgl_8hpp.html" title="libFGL&#39;s &quot;everything&quot; header">fgl.hpp</a>&gt;</code> provides the following:</p><ul>
+<p ><code>#include &lt;<a class="el" href="fgl_8hpp.html">fgl.hpp</a>&gt;</code> provides the following fascilities:</p><ul>
 <li><a class="el" href="page-fgl-header-debug.html">libFGL Debug fascilities</a></li>
 <li><a class="el" href="page-fgl-header-environment.html">libFGL Environment fascilities</a></li>
 <li><a class="el" href="page-fgl-header-io.html">libFGL I/O fascilities</a></li>
 <li><a class="el" href="page-fgl-header-types.html">libFGL Type fascilities</a></li>
-<li><a class="el" href="page-fgl-header-utility.html">libFGL Utilities</a> </li>
+<li><a class="el" href="page-fgl-header-utility.html">libFGL Utilities</a></li>
 </ul>
-<h1><a class="anchor" id="page-fgl-macros"></a>
+<p ><b>Include Folder Structure</b></p>
+<p >The <code><a class="el" href="fgl_8hpp.html">fgl.hpp</a></code> header includes all top-level <code>fgl/*.hpp</code> headers, which themselves include headers from their namesake subdirectories; this recursive inclusion continues until all library fascilities are included, except for experimental and opt-in features.</p>
+<p >The <code>FGLM</code> header includes <code><a class="el" href="fgl_8hpp.html">fgl.hpp</a></code> but also all opt-in features like <code>FGL_SHORT_MACROS</code> and exposes <code>using namespace fgl::literals;</code>.</p>
+<p >libFGL extensions must be included separately. Thier include hierarchy follows the same scheme as the main library, but as extentions are installed separately, they aren't included by the main library's top level headers. </p>
+<hr  />
+ <h1><a class="anchor" id="page-fgl-macros"></a>
 About Preprocessor Macros</h1>
 <p >libFGL's preprocessor macros come in two flavors: long names in a screaming-snake style which are prefixed with <code>FGL_</code> or <code>FGL_DEBUG_</code>, and short names which can vary in styling and are aliases to their longer counterparts.</p>
 <dl class="section note"><dt>Note</dt><dd>libFGL guarentees that no macros will be redefined, with the exception of short-macro symbols. If a preprocessor symbol is already defined, an error will be raised.</dd></dl>
 <p>Short macros are opt-in only to avoid name collisions, and will only be defined by a given header when that header's specific opt-in symbol is defined, or if the global-opt-in symbol <code>FGL_SHORT_MACROS</code> is defined.</p>
 <dl class="section note"><dt>Note</dt><dd>Opt-in symbol definitions must occur before including any libFGL headers. Some headers are used internally, so your include order may be misleading, causing the opt-in symbols to be defined after the definition headers, resulting in the short macros not being defined.</dd></dl>
-<p>Header specific opt-in symbols are styled as <code>FGL_DEBUG_</code><em>HEADER_NAME_WITHOUT_EXTENSION</em><code>_MACROS</code> and will be documented in the relevant modules. </p><dl class="section note"><dt>Note</dt><dd>Macros prefixed with <code>FGL_INTERNAL_</code> are only for internal use. They're often used for code generation.</dd></dl>
+<p>Header specific opt-in symbols are styled as <code>FGL_DEBUG_</code><em>HEADER_NAME_WITHOUT_EXTENSION</em><code>_MACROS</code> and will be documented in the relevant modules. </p><dl class="section see"><dt>See also</dt><dd>page-fgl-internals regarding <code>FGL_INTERNAL_</code> macros.</dd></dl>
 <dl class="section remark"><dt>Remarks</dt><dd>Function-like preprocessor macros may have difficulty parsing expressions that contain comma characters (<code>,</code>) such as <div class="fragment"><div class="line">MACRO( f&lt;a,b&gt;() );</div>
 </div><!-- fragment --> in which case you may need to wrap the expression in parentheses: <div class="fragment"><div class="line">MACRO( ( f&lt;a,b&gt;() ) );</div>
 </div><!-- fragment --> </dd></dl>
-<h1><a class="anchor" id="page-fgl-literals"></a>
+<hr  />
+ <h1><a class="anchor" id="page-fgl-literals"></a>
 About libFGL literals</h1>
-libFGL literals are contained within the <code>fgl::literals</code> namespace. </div></div><!-- contents -->
+libFGL literals are contained within the <code>fgl::literals</code> namespace. <hr  />
+ <h1><a class="anchor" id="page-fgl-internals"></a>
+About Internal and Experimental Features</h1>
+<p ></p>
+<p ><b> Internal Features </b></p>
+<p >Anything (folder, file, namespace, preprocessor definition, symbol, etc.) containing one or more of these words, regardless of underscores or other surrounding context, should be considered internal to the FGL library and not part of the public interface. You should never have to explicitly include these files or use these components directly. If you do end up using them, please do so with the understanding that they aren't intended for external use and may spontaneously explode at any time.</p>
+<ul>
+<li>
+<code>experimental</code> </li>
+<li>
+<code>WIP</code> </li>
+<li>
+<code>internal</code> </li>
+<li>
+<code>details</code> </li>
+<li>
+<code>test</code> </li>
+</ul>
+<p >Interal preprocessor definitions will always begin with <code>FGL_INTERNAL</code>. These are often used for code-generation or are the implementation details of public macros.</p>
+<p ><b> Experimental Features </b></p>
+<p >Experimental components shouldn't be used and are things that may or may not become part of libFGL at some point. Some experimental headers are in active developement are used for rapid evolution and discovery; while others are old copy+paste code snippets from other projects (including personal projects) which may be used as idea-fodder or are to be rewritten as libFGL components.</p>
+<p >Generally speaking, experimental components should be viewed as broken and/or incomplete junk. </p>
+</div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->

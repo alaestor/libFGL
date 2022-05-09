@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['thing_0',['Thing',['../classstupid__lib_1_1_thing.html',1,'stupid_lib']]]
+  ['with_5foverload_0',['with_overload',['../structwith__overload.html',1,'']]],
+  ['without_5foverload_1',['without_overload',['../structwithout__overload.html',1,'']]]
 ];

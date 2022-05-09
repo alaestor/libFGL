@@ -99,7 +99,6 @@ $(document).ready(function(){initNavTree('sleep_8hpp.html',''); initResizable();
 
 <div class="header">
   <div class="summary">
-<a href="#namespaces">Namespaces</a> &#124;
 <a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">sleep.hpp File Reference</div></div>
@@ -110,12 +109,6 @@ $(document).ready(function(){initNavTree('sleep_8hpp.html',''); initResizable();
 <code>#include &lt;thread&gt;</code><br />
 <code>#include &quot;<a class="el" href="traits_8hpp.html">../types/traits.hpp</a>&quot;</code><br />
 </div><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="namespaces" name="namespaces"></a>
-Namespaces</h2></td></tr>
-<tr class="memitem:namespacefgl"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefgl.html">fgl</a></td></tr>
-<tr class="memdesc:namespacefgl"><td class="mdescLeft">&#160;</td><td class="mdescRight">QUICKSTART. <br /></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:gad12ecfbf3b54df6f45a67795e704aaef"><td class="memTemplParams" colspan="2">template&lt;<a class="el" href="conceptfgl_1_1traits_1_1steady__clock.html">fgl::traits::steady_clock</a> T_clock&gt; </td></tr>
@@ -124,7 +117,7 @@ Functions</h2></td></tr>
 <tr class="separator:gad12ecfbf3b54df6f45a67795e704aaef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga7cb05052e04f1b73f381e0d129651997"><td class="memTemplParams" colspan="2">template&lt;<a class="el" href="conceptfgl_1_1traits_1_1steady__clock.html">fgl::traits::steady_clock</a> T_clock = std::chrono::steady_clock&gt; </td></tr>
 <tr class="memitem:ga7cb05052e04f1b73f381e0d129651997"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__group-utility-sleep.html#ga7cb05052e04f1b73f381e0d129651997">fgl::micro_sleep</a> (const std::chrono::microseconds for_duration) noexcept(noexcept(T_clock::now()))</td></tr>
-<tr class="memdesc:ga7cb05052e04f1b73f381e0d129651997"><td class="mdescLeft">&#160;</td><td class="mdescRight">Equivalent to calling <code><a class="el" href="group__group-utility-sleep.html#gad12ecfbf3b54df6f45a67795e704aaef">fgl::micro_sleep&lt;T_clock&gt;</a>(T_clock::now() + for_duration);</code>  <a href="group__group-utility-sleep.html#ga7cb05052e04f1b73f381e0d129651997">More...</a><br /></td></tr>
+<tr class="memdesc:ga7cb05052e04f1b73f381e0d129651997"><td class="mdescLeft">&#160;</td><td class="mdescRight">Equivalent to calling <code>fgl::micro_sleep&lt;T_clock&gt;(T_clock::now() + for_duration);</code>  <a href="group__group-utility-sleep.html#ga7cb05052e04f1b73f381e0d129651997">More...</a><br /></td></tr>
 <tr class="separator:ga7cb05052e04f1b73f381e0d129651997"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gade34939a6c4661c81b0e68bb5e5bd6d2"><td class="memTemplParams" colspan="2">template&lt;<a class="el" href="conceptfgl_1_1traits_1_1steady__clock.html">fgl::traits::steady_clock</a> T_clock&gt; </td></tr>
 <tr class="memitem:gade34939a6c4661c81b0e68bb5e5bd6d2"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__group-utility-sleep.html#gade34939a6c4661c81b0e68bb5e5bd6d2">fgl::nano_sleep</a> (const typename T_clock::time_point until_time) noexcept(noexcept(T_clock::now()))</td></tr>
@@ -132,7 +125,7 @@ Functions</h2></td></tr>
 <tr class="separator:gade34939a6c4661c81b0e68bb5e5bd6d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae7bd2ee88424a04ce3efd73ec824ed81"><td class="memTemplParams" colspan="2">template&lt;<a class="el" href="conceptfgl_1_1traits_1_1steady__clock.html">fgl::traits::steady_clock</a> T_clock = std::chrono::steady_clock&gt; </td></tr>
 <tr class="memitem:gae7bd2ee88424a04ce3efd73ec824ed81"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__group-utility-sleep.html#gae7bd2ee88424a04ce3efd73ec824ed81">fgl::nano_sleep</a> (const std::chrono::nanoseconds for_duration) noexcept(noexcept(T_clock::now()))</td></tr>
-<tr class="memdesc:gae7bd2ee88424a04ce3efd73ec824ed81"><td class="mdescLeft">&#160;</td><td class="mdescRight">Equivalent to calling <code><a class="el" href="group__group-utility-sleep.html#gade34939a6c4661c81b0e68bb5e5bd6d2">fgl::nano_sleep&lt;T_clock&gt;</a>(T_clock::now() + for_duration);</code>  <a href="group__group-utility-sleep.html#gae7bd2ee88424a04ce3efd73ec824ed81">More...</a><br /></td></tr>
+<tr class="memdesc:gae7bd2ee88424a04ce3efd73ec824ed81"><td class="mdescLeft">&#160;</td><td class="mdescRight">Equivalent to calling <code>fgl::nano_sleep&lt;T_clock&gt;(T_clock::now() + for_duration);</code>  <a href="group__group-utility-sleep.html#gae7bd2ee88424a04ce3efd73ec824ed81">More...</a><br /></td></tr>
 <tr class="separator:gae7bd2ee88424a04ce3efd73ec824ed81"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->

@@ -25,41 +25,15 @@
 var NAVTREE =
 [
   [ "libFGL", "index.html", [
-    [ "The Future Gadget Laboratory Library", "index.html", [
-      [ "Table of Contents", "index.html#autotoc_md0", null ],
-      [ "Getting Started", "index.html#autotoc_md2", [
-        [ "Installing and using libFGL", "index.html#autotoc_md3", null ],
-        [ "Compiling and running tests", "index.html#autotoc_md4", null ],
-        [ "Extensions for libFGL", "index.html#autotoc_md6", null ],
-        [ "General information", "index.html#autotoc_md8", [
-          [ "Include folder structure", "index.html#autotoc_md10", [
-            [ "Include everything", "index.html#autotoc_md11", null ],
-            [ "Include only what you want", "index.html#autotoc_md12", null ]
-          ] ],
-          [ "Internal and experimental features", "index.html#autotoc_md14", null ],
-          [ "Preprocessor macros", "index.html#autotoc_md16", [
-            [ "Short macros", "index.html#autotoc_md17", null ]
-          ] ]
-        ] ]
-      ] ],
-      [ "Contributing", "index.html#autotoc_md19", [
-        [ "How to contribute", "index.html#autotoc_md21", null ],
-        [ "Writing tests", "index.html#autotoc_md23", null ],
-        [ "Test build system & test dependencies", "index.html#autotoc_md25", null ]
-      ] ]
+    [ "The Future Gadget Laboratory Library", "index.html", null ],
+    [ "Getting Started", "page-fgl-getting_started.html", [
+      [ "Official Compatibility", "page-fgl-getting_started.html#page-fgl-about-compatibility", null ],
+      [ "Installing and using libFGL", "page-fgl-getting_started.html#page-fgl-getting_started-instrallation", null ],
+      [ "Compiling and Running Tests", "page-fgl-getting_started.html#page-fgl-getting_started-running_tests", null ],
+      [ "Extentions for LibFGL", "page-fgl-getting_started.html#page-fgl-getting_started-extentions", null ]
     ] ],
     [ "About libFGL fascilities", "page-fgl-about.html", "page-fgl-about" ],
     [ "Components", "modules.html", "modules" ],
-    [ "Namespaces", "namespaces.html", [
-      [ "Namespace List", "namespaces.html", "namespaces_dup" ],
-      [ "Namespace Members", "namespacemembers.html", [
-        [ "All", "namespacemembers.html", null ],
-        [ "Functions", "namespacemembers_func.html", null ],
-        [ "Variables", "namespacemembers_vars.html", null ],
-        [ "Typedefs", "namespacemembers_type.html", null ],
-        [ "Enumerations", "namespacemembers_enum.html", null ]
-      ] ]
-    ] ],
     [ "Concepts", "concepts.html", "concepts" ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -87,7 +61,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"group__group-debug-stopwatch.html#ga45cc5b09b38d06ce0f59d0c17125e0d4"
+"group__group-environment-build__info.html#ga72801cc29384d026244f267946394273"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';
