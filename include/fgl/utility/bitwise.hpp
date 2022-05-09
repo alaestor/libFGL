@@ -1,8 +1,7 @@
 #pragma once
-#ifndef FGL_BITWISE_HPP_INCLUDED
-#define FGL_BITWISE_HPP_INCLUDED
+#ifndef FGL_UTILITY_BITWISE_HPP_INCLUDED
+#define FGL_UTILITY_BITWISE_HPP_INCLUDED
 #include "../environment/libfgl_compatibility_check.hpp"
-
 
 #include <cstdint> // uint_fast8_t
 #include <climits> // CHAR_BIT
@@ -11,7 +10,24 @@
 
 namespace fgl {
 
-// returns a T_out containing the number of set bits (bits that are 1)
+/**
+@file
+
+@defgroup group-utility-bitwise Bitwise
+
+@brief High-performance bitwise operations
+
+@todo support for contiguous byte ranges
+
+@{
+*/
+
+/**
+@brief Counts the number of set bits (bits that are @c 1 ) in @p bits
+@tparam T_out The integral output type. Defaults to @c uint_fast8_t
+@param bits An unsigned integral value whose set bits will be counted.
+@returns The number of set bits (bits that are @c 1 ) in @p bits
+*/
 template <std::integral T_out = uint_fast8_t>
 [[nodiscard]] constexpr inline
 T_out count_set_bits(std::unsigned_integral auto bits) noexcept
@@ -31,7 +47,12 @@ T_out count_set_bits(std::unsigned_integral auto bits) noexcept
 	return static_cast<T_out>((bits * pattern4) >> highest_to_lowest_byte);
 }
 
-// returns a T_out containing the number of unset bits (bits that are 0)
+/**
+@brief Counts the number of unset bits (bits that are @c 0 ) in @p bits
+@tparam T_out The integral output type. Defaults to @c uint_fast8_t
+@param bits An unsigned integral value whose unset bits will be counted.
+@returns The number of set bits (bits that are @c 0 ) in @p bits
+*/
 template <std::integral T_out = uint_fast8_t>
 [[nodiscard]] constexpr inline
 T_out count_unset_bits(const std::unsigned_integral auto bits) noexcept
@@ -40,6 +61,8 @@ T_out count_unset_bits(const std::unsigned_integral auto bits) noexcept
 	return static_cast<T_out>((sizeof(decltype(bits)) * CHAR_BIT) - set_bits);
 }
 
+///@} group-utility-bitwise
+
 } // namespace fgl
 
-#endif // FGL_BITWISE_HPP_INCLUDED
+#endif // FGL_UTILITY_BITWISE_HPP_INCLUDED

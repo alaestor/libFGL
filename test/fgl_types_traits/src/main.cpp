@@ -29,28 +29,6 @@ consteval bool test_byte_type()
 	return true;
 }
 
-consteval bool test_cbyte_type()
-{
-	using fgl::traits::cbyte_type;
-	static_assert(cbyte_type<std::byte>);
-	static_assert(cbyte_type<char>);
-	static_assert(cbyte_type<unsigned char>);
-	static_assert(cbyte_type<const std::byte>);
-	static_assert(cbyte_type<const char>);
-	static_assert(cbyte_type<const unsigned char>);
-	static_assert(cbyte_type<const volatile std::byte>);
-	static_assert(cbyte_type<const volatile char>);
-	static_assert(cbyte_type<const volatile unsigned char>);
-	static_assert(cbyte_type<void>);
-	static_assert(cbyte_type<const void>);
-	static_assert(cbyte_type<const volatile void>);
-	static_assert(!cbyte_type<signed char>);
-	static_assert(!cbyte_type<int>);
-	static_assert(!cbyte_type<short>);
-	static_assert(!cbyte_type<double>);
-	return true;
-}
-
 template <typename T>
 consteval bool test_numeric_impl_true()
 {
@@ -147,12 +125,34 @@ consteval bool test_pointer_type()
 	return true;
 }
 
+namespace test_steady_clock_ns{
+struct unsteady_clock
+{
+	using rep = int;
+	using period = std::ratio<1, 1>;
+	using duration = std::chrono::duration<rep, period>;
+	using time_point = std::chrono::time_point<unsteady_clock>;
+	static constexpr inline bool is_steady{ false };
+	static constexpr time_point now() noexcept { return {}; }
+};
+static_assert(std::chrono::is_clock_v<test_steady_clock_ns::unsteady_clock>);
+}
+consteval bool test_steady_clock()
+{
+	static_assert(fgl::traits::steady_clock<std::chrono::steady_clock>);
+	static_assert(
+		!fgl::traits::steady_clock<test_steady_clock_ns::unsteady_clock>
+	);
+	return true;
+}
+
 consteval bool test_type_concepts()
 {
 	static_assert(test_byte_type());
 	static_assert(test_numeric_type());
 	static_assert(test_not_same());
 	static_assert(test_pointer_type());
+	static_assert(test_steady_clock());
 	return true;
 }
 
@@ -244,12 +244,25 @@ consteval bool test_pointer_to_byte()
 	return true;
 }
 
+consteval bool test_pointer_to_non_void()
+{
+	using fgl::traits::pointer_to_non_void;
+	static_assert(!pointer_to_non_void<void*>);
+	static_assert(!pointer_to_non_void<int>);
+	static_assert(pointer_to_non_void<int*>);
+	static_assert(pointer_to_non_void<const int*>);
+	static_assert(pointer_to_non_void<const volatile int*>);
+	static_assert(pointer_to_non_void<const volatile int* const>);
+	static_assert(pointer_to_non_void<const volatile int* const volatile>);
+	return true;
+}
+
 consteval bool test_pointer_traits()
 {
 	static_assert(test_remove_cvptr_t());
 	static_assert(test_remove_all_pointers());
 	static_assert(test_pointer_to_byte());
-	static_assert(test_cbyte_type());
+	static_assert(test_pointer_to_non_void());
 	return true;
 }
 

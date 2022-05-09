@@ -16,38 +16,38 @@
 	#error NDEBUG must not be defined for tests because they rely on assertions
 #endif // NDEBUG
 
+template <typename T>
+constexpr bool test_enumerate()
+{
+	using namespace fgl::traits;
+	using fgl::enumerate, fgl::cenumerate;
+
+	std::array a{1,2,3,4};
+
+	for (const auto& [i,v] : enumerate<T>(a))
+	{
+		static_assert(std::is_same_v<std::remove_cvref_t<decltype(i)>, T>);
+		static_assert(is_nonconst_ref<decltype(v)>);
+		constexpr_assert(&v == &a[static_cast<decltype(a)::size_type>(i)]);
+	}
+
+	for (const auto& [i,v] : cenumerate<T>(a))
+	{
+		static_assert(std::is_same_v<std::remove_cvref_t<decltype(i)>, T>);
+		static_assert(is_const_ref<decltype(v)>);
+		constexpr_assert(&v == &a[static_cast<decltype(a)::size_type>(i)]);
+	}
+
+	return true;
+}
+
 int main()
 {
-	/*
 	[]() consteval -> void
 	{
-		using namespace fgl::traits;
-		using fgl::enumerate, fgl::cenumerate;
-
-		/// TODO once libc bug is fixed, rework test with a second type
-		// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100639
-
-		std::array a{1,2,3,4};
-		using T1 = uint_fast32_t;
-
-		for (const auto& [i,v] : enumerate<T1>(a))
-		{
-			static_assert(std::is_same_v<std::remove_cvref_t<decltype(i)>, T1>);
-			static_assert(is_nonconst_ref<decltype(v)>);
-			constexpr_assert(&v == &a[i]);
-		}
-
-		for (const auto& [i,v] : cenumerate<T1>(a))
-		{
-			static_assert(is_const_ref<decltype(v)>);
-			constexpr_assert(&v == &a[i]);
-		}
-	}();//*/
-
-	std::cout
-		<< "\ttest/fgl_utility_enumerate is temporarly disabled (libc bug).\n"
-		<< "\thttps://gcc.gnu.org/bugzilla/show_bug.cgi?id=100639"
-		<< std::endl;
+		constexpr_assert(test_enumerate<int>());
+		constexpr_assert(test_enumerate<unsigned long long>());
+	}();
 
 	return EXIT_SUCCESS;
 }

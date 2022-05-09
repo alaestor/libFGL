@@ -8,5 +8,5 @@
 
 void notmain()
 {
-	fgl::debug::output::stream() << "notmain test";
+	fgl::debug::output("notmain test");
 }

@@ -1,5 +1,5 @@
 #include <cstdlib> // EXIT_SUCCESS, EXIT_FAILURE, byte
-#include <type_traits> // is_same_v
+#include <concepts> // same_as
 
 #define FGL_SHORT_MACROS
 #include <fgl/debug/constexpr_assert.hpp>
@@ -12,55 +12,183 @@
 
 using fgl::cbyte_ptr_wrapper;
 
-bool test_cbyte_ptr_wrapper_explicit()
+template <typename T>
+constexpr bool test_conversions()
 {
-	char c{ 'c' };
-	const cbyte_ptr_wrapper<decltype(c)*, false> ptr( &c );
-	[[maybe_unused]] void* vp{ ptr.as<void*>() };
-	[[maybe_unused]] char* cp{ ptr.as<char*>() };
-	[[maybe_unused]] unsigned char* up{ ptr.as<unsigned char*>() };
-	[[maybe_unused]] std::byte* bp{ ptr.as<std::byte*>() };
+	cbyte_ptr_wrapper<T*> wrapper{ nullptr };
+	[[maybe_unused]] void* p1{ wrapper };
+	[[maybe_unused]] const void* p1c{ wrapper };
+	[[maybe_unused]] const volatile void* p1cv{ wrapper };
+	if (std::same_as<T*, char*> || !std::is_constant_evaluated())
+	{
+		[[maybe_unused]] char* p2{ wrapper };
+		[[maybe_unused]] const char* p2c{ wrapper };
+	}
+	else if (std::same_as<T*, unsigned char*> || !std::is_constant_evaluated())
+	{
+		[[maybe_unused]] unsigned char* p2{ wrapper };
+		[[maybe_unused]] const unsigned char* p2c{ wrapper };
+	}
+	else if (std::same_as<T*, std::byte*> || !std::is_constant_evaluated())
+	{
+		[[maybe_unused]] std::byte* p2{ wrapper };
+		[[maybe_unused]] const std::byte* p2c{ wrapper };
+	}
 	return true;
 }
 
-bool test_cbyte_ptr_wrapper_explicit_const()
+template <typename T>
+constexpr bool test_comparisons()
 {
-	const char c{ 'c' };
-	const cbyte_ptr_wrapper<decltype(c)*, false> ptr( &c );
-	[[maybe_unused]] const void* vp{ ptr.as<const void*>() };
-	[[maybe_unused]] const char* cp{ ptr.as<const char*>() };
-	[[maybe_unused]] const unsigned char* up{ ptr.as<const unsigned char*>() };
-	[[maybe_unused]] const std::byte* bp{ ptr.as<const std::byte*>() };
+	cbyte_ptr_wrapper<T*> wrapper(nullptr);
+
+	constexpr_assert(wrapper.underlying_pointer == nullptr);
+	constexpr_assert(wrapper == nullptr);
+	constexpr_assert(nullptr == wrapper);
+
+	void* vp{ nullptr };
+	char* cp{ nullptr };
+	unsigned char* ucp{ nullptr };
+	std::byte* bp{ nullptr };
+
+	constexpr_assert(wrapper == vp);
+	constexpr_assert(wrapper == cp);
+	constexpr_assert(wrapper == ucp);
+	constexpr_assert(wrapper == bp);
 	return true;
 }
 
-bool test_cbyte_ptr_wrapper_implicit()
+template <typename T>
+constexpr bool test_arithmetic()
 {
-	char c{ 'c' };
-	const cbyte_ptr_wrapper<decltype(c)*, true> ptr( &c );
-	[[maybe_unused]] void* vp{ ptr };
-	[[maybe_unused]] char* cp{ ptr };
-	[[maybe_unused]] unsigned char* uc{ ptr };
-	[[maybe_unused]] std::byte* bp{ ptr };
+	std::ptrdiff_t offset{ 1 };
+	T b{};
+	T* expected{ &b };
+	cbyte_ptr_wrapper wrapper(expected);
+
+	constexpr_assert(
+		static_cast<void*>(&*wrapper)
+		== static_cast<void*>(&*expected)
+	);
+
+	constexpr_assert(
+		static_cast<void*>(&wrapper[0])
+		== static_cast<void*>(&expected[0])
+	);
+
+	constexpr_assert(
+		static_cast<void*>(wrapper + offset)
+		== static_cast<void*>(expected + offset)
+	);
+
+	constexpr_assert(
+		static_cast<void*>(wrapper - offset)
+		== static_cast<void*>(expected - offset)
+	);
+
+	constexpr_assert(
+		static_cast<void*>(wrapper += offset)
+		== static_cast<void*>(expected += offset)
+	);
+
+	constexpr_assert(
+		static_cast<void*>(wrapper -= offset)
+		== static_cast<void*>(expected -= offset)
+	);
+
+	constexpr_assert(
+		static_cast<void*>(offset + wrapper)
+		== static_cast<void*>(offset + expected)
+	);
+
+	constexpr_assert(
+		wrapper + offset - wrapper
+		== expected + offset - expected
+	);
+
+	constexpr_assert(
+		static_cast<void*>(wrapper++)
+		== static_cast<void*>(expected++)
+	);
+
+	constexpr_assert(
+		static_cast<void*>(++wrapper)
+		== static_cast<void*>(++expected)
+	);
+
+	constexpr_assert(
+		static_cast<void*>(wrapper--)
+		== static_cast<void*>(expected--)
+	);
+
+	constexpr_assert(
+		static_cast<void*>(--wrapper)
+		== static_cast<void*>(--expected)
+	);
+
+	expected = &b;
+	wrapper = &b;
+
+	constexpr_assert(
+		static_cast<void*>(wrapper)
+		== static_cast<void*>(expected)
+	);
+
+	wrapper = nullptr;
+
+	void* vp{ nullptr };
+	char* cp{ nullptr };
+	unsigned char* ucp{ nullptr };
+	std::byte* bp{ nullptr };
+
+	if (std::same_as<T, char> || !std::is_constant_evaluated())
+	{
+		[[maybe_unused]] auto rcp = wrapper - cp;
+		(void)(wrapper = cp);
+	}
+
+	if (std::same_as<T, unsigned char> || !std::is_constant_evaluated())
+	{
+		[[maybe_unused]] auto rucp = wrapper - ucp;
+		(void)(wrapper = ucp);
+	}
+
+	if (std::same_as<T, std::byte> || !std::is_constant_evaluated())
+	{
+		[[maybe_unused]] auto rbp = wrapper - bp;
+		(void)(wrapper = bp);
+	}
+
+	if (!std::is_constant_evaluated())
+		(void)(wrapper = vp);
+
 	return true;
 }
 
-bool test_cbyte_ptr_wrapper_implicit_const()
+template <typename T>
+bool test_cbyte_ptr_wrapper()
 {
-	const char c{ 'c' };
-	const cbyte_ptr_wrapper<decltype(c)*, true> ptr( &c );
-	[[maybe_unused]] const void* vp{ ptr };
-	[[maybe_unused]] const char* cp{ ptr };
-	[[maybe_unused]] const unsigned char* uc{ ptr };
-	[[maybe_unused]] const std::byte* bp{ ptr };
+	static_assert(test_conversions<T>());
+	assert(test_conversions<T>());
+
+	static_assert(test_comparisons<T>());
+	assert(test_comparisons<T>());
+
+	if constexpr (not std::same_as<T, void>)
+	{
+		static_assert(test_arithmetic<T>());
+		assert(test_arithmetic<T>());
+	}
+
 	return true;
 }
 
 int main()
 {
-	constexpr_assert(test_cbyte_ptr_wrapper_explicit());
-	constexpr_assert(test_cbyte_ptr_wrapper_explicit_const());
-	constexpr_assert(test_cbyte_ptr_wrapper_implicit());
-	constexpr_assert(test_cbyte_ptr_wrapper_implicit_const());
+	assert(test_cbyte_ptr_wrapper<void>());
+	assert(test_cbyte_ptr_wrapper<char>());
+	assert(test_cbyte_ptr_wrapper<unsigned char>());
+	assert(test_cbyte_ptr_wrapper<std::byte>());
+
 	return EXIT_SUCCESS;
 }

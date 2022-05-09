@@ -242,6 +242,7 @@ private:
 	[[nodiscard]] constexpr
 	difference_type wrap_index(const difference_type index) const noexcept
 	{
+		// TODO refactor this to use relative offsets rather than addresses
 		if (const auto cursor{ m_iter + index };
 			std::unsigned_integral<difference_type> || cursor >= m_begin)
 		{

@@ -1,6 +1,9 @@
 ####	Dot Hidden Directories
 .*/
 
+####	Doxygen Output
+docs/html
+
 ####	Misc.
 *.git_ignored
 git_ignored/

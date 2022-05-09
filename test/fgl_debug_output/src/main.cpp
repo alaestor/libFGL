@@ -28,7 +28,7 @@ class fgl::debug::output_config<my_struct>
 	static void turn_on() { m_enabled = true; }
 	static void turn_off() { m_enabled = false; }
 	static bool enabled() { return m_enabled; }
-	static fgl::debug::priority get_priority() { return priority::info; }
+	static fgl::debug::priority priority_level() { return priority::info; }
 	static std::string_view name() { return "my struct"; }
 
 	static std::string format(const my_struct& o)
@@ -81,19 +81,19 @@ bool test_output_channel_enable_status()
 	assert(!last_output().empty());
 
 	// global generic output switch
-	generic_output_disabled = true;
+	disable_generic_output_channels = true;
 	output('a');
 	assert(last_output().empty());
-	generic_output_disabled = false;
+	disable_generic_output_channels = false;
 	return true;
 }
 
 bool test_priority_threshold()
 {
-	output::priority_threshold(priority::warning);
-	assert(output::priority_threshold() == priority::warning);
-	assert(output::priority_threshold() > priority::info);
-	assert(test_config::get_priority() == priority::info);
+	output::priority_threshold = priority::warning;
+	assert(output::priority_threshold == priority::warning);
+	assert(output::priority_threshold > priority::info);
+	assert(test_config::priority_level() == priority::info);
 	assert(fgl::debug::output::can_send<test_config>() == false);
 	output(my_struct{1,2,3});
 	assert(last_output().empty());
@@ -103,16 +103,24 @@ bool test_priority_threshold()
 int main()
 {
 	assert(test_config::format({ 1, 2, 3 }) == std::string("1 2 3"));
-	assert(&fgl::debug::output::stream() == &std::cout);
-	fgl::debug::output::priority_threshold(fgl::debug::priority::minimum);
+	fgl::debug::output::priority_threshold = fgl::debug::priority::minimum;
 
 	// test basic stream functionality & across translation units
-	output::stream(sstream);
+	output::stream = sstream;
 	const std::string maintest("main test");
-	output::stream() << maintest;
-	assert(last_output() == maintest);
+	output(maintest);
+	assert(
+		last_output() ==
+			output::format_head(output_config<decltype(maintest)>::name())
+			+ maintest + '\n'
+	);
+
 	notmain();
-	assert(last_output() == std::string("notmain test"));
+	assert(
+		last_output() ==
+			output::format_head(output_config<const char[13]>::name())
+			+ "notmain test\n"
+	);
 
 	// test generic output
 	output("hello, world");

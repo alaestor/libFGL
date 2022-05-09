@@ -1,6 +1,6 @@
 #include <cstdlib> // EXIT_SUCCESS, EXIT_FAILURE
 
-#include <fgl/environment/build_type.hpp>
+#include <fgl/environment/build_info.hpp>
 
 #include "notmain.hpp"
 

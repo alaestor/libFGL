@@ -1,66 +1,7 @@
 #pragma once
-#ifndef FGL_RANDOM_HPP_INCLUDED
-#define FGL_RANDOM_HPP_INCLUDED
+#ifndef FGL_UTILITY_RANDOM_HPP_INCLUDED
+#define FGL_UTILITY_RANDOM_HPP_INCLUDED
 #include "../environment/libfgl_compatibility_check.hpp"
-
-/// QUICK-START GUIDE
-/* Syntax: required [optional]
-
-	fgl::random<[type], [distribution], [generator], [table size]>
-		my_rng([min value], [max value], [seed]);
-
-	type var = my_rng(); // returns `type` between `min` and `max` (inclusive)
-
-	template:
-	`type` numeric datatype. supports floating-point. [default: uint_fast64_t]
-	`distribution` statistical distribution [uniform int/real distribution]
-	`generator` pseudo-random number generator [mt19937_64]
-	`table size` count of outputs to shuffle (helps improve randomness) [8]
-
-	constructor:
-	`min value` minimum (inclusive) value that can be generated [min of type]
-	`max value` maximum (inclusive) value that can be generated [max of type]
-	`seed` to seed the shuffled generator [std::random_device{}()]
-*/
-/// EXAMPLE PROGRAM
-/*
-	#include <iostream> // cout, endl
-	#include <fgl/utility/random.hpp>
-
-	int main()
-	{
-		using std::cout, std::endl, fgl::random;
-
-		// defualts: uint_fast64_t, between type min and max, uniform dist.
-		random rng_a;
-		cout << "between min and max uint_fast64_t: " << rng_a() << endl;
-
-		random<int> rng_b(-9, 9);
-		cout << "between -9 and 9 int: " << rng_b() << endl;
-
-		random<uint_least8_t> rng_c;
-		cout
-			<< "between min and max uint_least8_t: "
-			<< static_cast<unsigned int>(rng_c())
-			<< endl;
-		// typecast because underlying 8bit type is often a char
-
-		random<float> rng_d(3.14f, 69.69f);
-		cout << "between 3.14 and 69.69 float: " << rng_d() << endl;
-
-		// changing distribution
-		random<double, std::normal_distribution<double>> rng_e;
-		cout << "between min and max double, normal dist: " << rng_e() << endl;
-	}
-*/
-/// EXAMPLE OUTPUT
-/*
-between min and max uint_fast64_t: 6909273070770195903
-between between -9 and 9 int: -3
-between min and max uint_least8_t: 156
-between 3.14 and 69.69 float: 28.5469
-between min and max double, normal dist: -inf
-*/
 
 #include <cstdint> // uint_fast64_t
 #include <concepts> // integral, floating_point
@@ -72,12 +13,32 @@ between min and max double, normal dist: -inf
 
 namespace fgl {
 
-/// IMPORTANT NOTE this header uses sadface initializer syntax
+/**
+@file
 
-/*A callable object that can generate pseudo-random numbers of type T along a
-T_distribution, using T_generator, between values min and max (inclusive).
-Call the object to generate a number. For example:
-`random rng(1,5); int var = rng();`*/
+@example example/fgl/utility/random.cpp
+	An example for @ref group-utility-random
+
+@defgroup group-utility-random Random
+
+@brief A simplifying abstraction for standard pseudo-random numbers.
+
+@see the example program @ref example/fgl/utility/random.cpp
+@{
+*/
+
+///@internal @attention This header uses sadface initializer syntax (Line 69)
+
+/**
+@copybrief group-utility-random
+@details A callable object that can generate pseudo-random numbers of type
+	@p T from @p T_distribution using @p T_generator  between
+	<tt>[min, max]</tt>
+@tparam T The type of random value to generate
+@tparam T_distribution The distribution to use
+@tparam T_generator The generator to use
+@tparam T_table_size The table size for the <tt>std::shuffle_order_engine</tt>
+*/
 template
 <
 	fgl::traits::numeric_type T = uint_fast64_t,
@@ -93,23 +54,56 @@ template
 >
 struct random
 {
-	std::shuffle_order_engine<T_generator, T_table_size> engine;
 	T_distribution distribution;
+	std::shuffle_order_engine<T_generator, T_table_size> engine;
 
+	/**
+	@{ @name Constructors
+	@param min Minimum value that can be generated, which defaults to the
+		minimum numeric limit of @p T
+	@param max Maximum value that can be generated,  which defaults to the
+		maximum numeric limit of @p T
+	@param seed Seed for the pseudo-random number generator, which defaults
+		to @c std::random_device{}()
+	*/
 	[[nodiscard]] explicit random(
 		const T min = std::numeric_limits<T>::min(),
 		const T max = std::numeric_limits<T>::max(),
 		const std::random_device::result_type seed = (std::random_device{}())
 	):
-		engine(seed),
-		distribution(min, max)
+		distribution(min, max),
+		engine(seed)
 	{}
+	///@} Constructors
 
-	// generates a random T value in accordance with the fgl::random object.
-	[[nodiscard]] T operator()()
+	/**
+	@brief Generates a random value between <tt>[min, max]</tt>
+	@returns The result of @c distribution(engine)
+	*/
+	[[nodiscard]] T operator()() noexcept(noexcept(distribution(engine)))
 	{ return distribution(engine); }
+
+	/**
+	@details Calls the @p debug_object with the generated value, and returns
+		whatever the debug object returns.
+	@remarks Because the input and output may differ, this method can be used
+		to override the random number generator to return a deterministic
+		value. It could be used to passively collect statistical data about
+		the random number generator.
+	@tparam T_debug_object A callable object type that takes a single argument
+		of type @p T and returns a value of type @p T.
+	@param debug_object The callable object which takes the generated @p T
+		value as an argument and returns a @p T
+	@returns The result of @c debug_object(distribution(engine))
+	*/
+	template <class T_debug_object>
+	requires requires(T t, T_debug_object obj){{ obj(t) } -> std::same_as<T>;}
+	[[nodiscard]] T operator()(const T_debug_object& debug_object)
+	noexcept(noexcept(debug_object(distribution(engine))))
+	{ return debug_object(distribution(engine)); }
 };
 
-}// namespace fgl
+///@}
+} // namespace fgl
 
-#endif // RANDOMINT_HPP_INCLUDED
+#endif // FGL_UTILITY_RANDOM_HPP_INCLUDED

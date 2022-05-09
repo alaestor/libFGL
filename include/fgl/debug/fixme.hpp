@@ -3,187 +3,195 @@
 #define FGL_DEBUG_FIXME_HPP_INCLUDED
 #include "../environment/libfgl_compatibility_check.hpp"
 
-/// QUICK-START GUIDE
-/*
-	A simple way to leave reminders, notes, code review tags,
-	and easily document things that are a work-in-progress.
-
-	FGL_DEBUG_FIX_ME; // simple output
-	FGL_DEBUG_FIX("a message"); // providing a message
-	FGL_DEBUG_FIX_THIS(expression); // message is code (will be executed)
-
-	with #define FGL_DEBUG_FIXME_SHORT_MACROS or FGL_SHORT_MACROS
-
-	FIX_ME;
-	FIX("a message");
-	FIX_THIS(expression);
-
-	To disable all [FIXME] output, define NDEBUG above this include,
-	or call fgl::debug::output_config<fgl::debug::fixme>::turn_off();
-*/
-/// EXAMPLE PROGRAM
-/*
-#include <iostream>
-
-// define enables the short "FIX", "FIX_ME", and "FIX_THIS"
-// could also #define FGL_SHORT_MACROS
-#define FGL_DEBUG_FIXME_SHORT_MACROS
-#include <fgl/debug/fixme.hpp>
-
-int add(int a, int b)
-{
-	FIX_THIS( return a - b; )
-}
-
-int main()
-{
-	FIX_ME;
-	FIX_ME const int one{ 1};
-	const int two{ 2 }; FIX_ME
-	const int three{ add(one, two) };
-	std::cout << one << " + " << two << " = " << three << std::endl;
-	FIX("the author is an idiot")
-}
-*/
-/// EXAMPLE OUTPUT
-/*
-[FIXME] file:src/main.cpp(15:3) 'int main()'
-[FIXME] file:src/main.cpp(16:3) 'int main()'
-[FIXME] file:src/main.cpp(17:23) 'int main()'
-[FIXME] file:src/main.cpp(8:3) 'int add(int, int)'
- \_____ return a - b;
-1 + 2 = -1
-[FIXME] file:src/main.cpp(20:3) 'int main()'
- \_____ the author is an idiot
-*/
-
-
-
-/// INTERNAL NOTES
-/* TODO -> future module overhaul
-	Will still need a .h for macros
-*/
-/* TODO -> future reflection overhaul
-	Complete overhaul when C++ gets reflection and compile-time output.
-	Separate compiletime and runtime FIXME interfaces. Minimize macro usage.
-	Lowest macro will expand to constexpr{reflection}? Macro may not be needed.
-*/
-
 #include <string_view>
 #include <source_location>
 
 #include "../debug/output.hpp"
 
-#ifdef FGL_SHORT_MACROS
-	#define FGL_DEBUG_FIXME_SHORT_MACROS
-#endif // FGL_SHORT_MACROS
+namespace fgl::debug {
+
+/**
+@file
+
+@example example/fgl/debug/fixme.cpp
+	An example for @ref group-debug-fixme
+
+@defgroup group-debug-fixme FixMe
+
+@brief Sends reminders or code expressions to libFGL's @ref group-debug-output
+
+@details
+	@see the example program @ref example/fgl/debug/fixme.cpp
+
+@todo future module overhaul will still need a .h for macros
+@todo future C++ static reflection features may allow for a complete overhaul
+@{
+*/
 
 #ifdef NDEBUG
-	#define FGL_DEBUG_FIX(message)
-	#define FGL_DEBUG_FIX_ME
-	#define FGL_DEBUG_FIX_THIS(expr) expr
+	#ifndef FGL_DEBUG_FIX
+		#define FGL_DEBUG_FIX(message)
+	#else
+		#error FGL_DEBUG_FIX already defined
+	#endif
+	#ifndef FGL_DEBUG_FIX_ME
+		#define FGL_DEBUG_FIX_ME
+	#else
+		#error FGL_DEBUG_FIX_ME already defined
+	#endif
+	#ifndef FGL_DEBUG_FIX_THIS
+		#define FGL_DEBUG_FIX_THIS(expr) expr
+	#else
+		#error FGL_DEBUG_FIX_THIS already defined
+	#endif
 #else
 	#ifndef FGL_DEBUG_FIX
-///////////////////////////////////////////////////////////////////////////////
+		/**
+		@brief Send a message with source location info to libFGL's
+			@ref group-debug-output on the "fixme" channel
+		@param message a message to be sent (<tt>std::string_view</tt>)
+		@note If <tt>NDEBUG</tt> is defined, this macro expands to nothing and
+			no output will be sent.
+		*/
 		#define FGL_DEBUG_FIX(message) \
 			fgl::debug::output(fgl::debug::fixme(message));
-///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FGL_DEBUG_FIX already defined
 	#endif // ifndef FGL_DEBUG_FIX
 
 	#ifndef FGL_DEBUG_FIX_ME
-///////////////////////////////////////////////////////////////////////////////
+		/**
+		@brief Send the source location info to libFGL's
+			@ref group-debug-output on the "fixme" channel
+		@note If <tt>NDEBUG</tt> is defined, this macro expands to nothing and
+			no output will be sent.
+		*/
 		#define FGL_DEBUG_FIX_ME FGL_DEBUG_FIX("")
-///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FGL_DEBUG_FIX_ME already defined
 	#endif // ifndef FGL_DEBUG_FIX_ME
 
 	#ifndef FGL_DEBUG_FIX_THIS
 		#ifndef FGL_DEBUG_FIX_THIS_IMPL
-///////////////////////////////////////////////////////////////////////////////
+			/// @cond FGL_INTERNAL_DOCS
+			/// @internal @brief implementation to stringify the expression
 			#define FGL_DEBUG_FIX_THIS_IMPL(expr) FGL_DEBUG_FIX(#expr) expr;
-///////////////////////////////////////////////////////////////////////////////
+			///@endcond
 		#else
 			#error FGL_DEBUG_FIX_THIS_IMPL already defined
 		#endif // ifndef FGL_DEBUG_FIX_THIS_IMPL
-///////////////////////////////////////////////////////////////////////////////
-		#define FGL_DEBUG_FIX_THIS(expr) FGL_DEBUG_FIX_THIS_IMPL(expr)
-///////////////////////////////////////////////////////////////////////////////
+		/**
+		@brief Send an expression with source location info and it's
+			evaluated result to libFGL's @ref group-debug-output on the
+			"fixme" channel
+		@param expression The expression which will be stringified
+		@note If <tt>NDEBUG</tt> is defined, this macro expands to the in-place
+			expression which will always be evaluated. No output will be sent.
+		*/
+		#define FGL_DEBUG_FIX_THIS(expression) \
+			FGL_DEBUG_FIX_THIS_IMPL(expression)
 	#else
 		#error FGL_DEBUG_FIX_THIS already defined
 	#endif // ifndef FGL_DEBUG_FIX_THIS
 #endif // ifndef NDEBUG
 
-// Opt-in short macros to avoid collisions
+/**
+@{ @name Opt-in Short Macros
+@ref page-fgl-macros
+*/
+#ifdef FGL_SHORT_MACROS
+	/// The Opt-in short macro symbol
+	#define FGL_DEBUG_FIXME_SHORT_MACROS
+#endif // FGL_SHORT_MACROS
+
 #ifdef FGL_DEBUG_FIXME_SHORT_MACROS
 	#ifndef FIX
-///////////////////////////////////////////////////////////////////////////////
+		/// Alias for <tt>@ref FGL_DEBUG_FIX()</tt>
 		#define FIX(message) FGL_DEBUG_FIX(message)
-///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FIX already defined (FGL_DEBUG_FIXME_SHORT_MACROS)
 	#endif // ifndef FIX
 
 	#ifndef FIX_ME
-///////////////////////////////////////////////////////////////////////////////
+		/// Alias for <tt>@ref FGL_DEBUG_FIX_ME()</tt>
 		#define FIX_ME FGL_DEBUG_FIX_ME
-///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FIX_ME already defined (FGL_DEBUG_FIXME_SHORT_MACROS)
 	#endif // ifndef FIX_ME
 
 	#ifndef FIX_THIS
-///////////////////////////////////////////////////////////////////////////////
+		/// Alias for <tt>@ref FGL_DEBUG_FIX_THIS()</tt>
 		#define FIX_THIS(expr) FGL_DEBUG_FIX_THIS_IMPL(expr)
-///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error FIX_THIS already defined (FGL_DEBUG_FIXME_SHORT_MACROS)
 	#endif // ifndef FIX_THIS
 #endif // ifdef FGL_DEBUG_FIXME_SHORT_MACROS
+///@} Opt-in Short Macros
 
-namespace fgl::debug {
-
+/**
+@brief Used to specialize <tt>fgl::debug::output_config<fixme></tt> is sent to
+	the <tt>@ref fgl::debug::output()</tt> when a fix-me message is emitted.
+@remarks In the vast majority of cases, this object type will only be used in
+	the implementations of the <tt>@ref FIX()<tt>, <tt>@ref FIX_ME()<tt>, and
+	<tt>@ref FIX_THIS</tt> macros. You probably don't want to use this
+	directly, but could if so desired.
+@internal @note (internal) code duplication with echo.hpp
+*/
 struct fixme final
 {
-	const std::string_view message;
+	const std::string_view string;
 	const std::source_location location;
 
-	[[nodiscard]] constexpr explicit
-	fixme(
-		const std::string_view msg,
-		const std::source_location& loc = std::source_location::current())
-	: message{ msg }, location{ loc }
+	[[nodiscard]] constexpr explicit fixme(
+		const std::string_view in_string,
+		const std::source_location& in_location =
+			std::source_location::current())
+	: string{ in_string }, location{ in_location }
 	{}
 };
 
+///@cond FGL_INTERNAL_DOCS
+namespace internal {
+static inline constexpr string_literal fixme_cn{ "FIXME" };
+} // namespace internal
+///@endcond FGL_INTERNAL_DOCS
+
+/**
+@brief An <tt>fgl::debug::output_handler</tt> specialization for using
+	<tt>@ref fixme</tt> with libFGL's @ref group-debug-output.
+
+@see @ref group-debug-output and <tt>@ref fgl::debug::output::operator()()</tt>
+*/
 template <>
 class output_config<fixme> final
+:public simple_output_channel<true, priority::debug, internal::fixme_cn, fixme>
 {
-	static inline bool m_enabled{ true };
+	output_config(auto&&...) = delete; ///< should never be instantiated
 	public:
-	output_config(auto&&...) = delete;
-	~output_config() = delete;
+	using channel_t = simple_output_channel<
+		true, priority::debug, internal::fixme_cn, fixme
+	>;
 
-	static void turn_on() { m_enabled = true; }
-	static void turn_off() { m_enabled = false; }
-	static bool enabled() { return m_enabled; }
-	static priority get_priority() { return priority::debug; }
-	static std::string_view name() { return "FIXME"; }
-
+	///@{ @name Configurable formatters
+	/// Formatter for fix-me strings (both expressions and messages)
 	static inline output::format_msg_src_t formatter{
 		output::default_fmt_msg_src
 	};
+	///@} Configurable formatters
 
+	/**
+	@brief To satisfy <tt>fgl::debug::output_formatter</tt>
+	@returns the result of <tt>formatter(fixme.string, fixme.location)</tt>
+	*/
 	[[nodiscard]] static std::string format(const fixme& fixme)
 	{
-		return formatter(fixme.message, fixme.location);
+		return formatter(fixme.string, fixme.location);
 	}
 };
 
 static_assert(output_handler<output_config<fixme>, fixme>);
 
+///@} // group-debug-fixme
 } // namespace fgl::debug
 
 #endif // ifndef FGL_DEBUG_FIXME_HPP_INCLUDED

@@ -23,10 +23,8 @@ consteval bool test_offsets_impl(
 {
 	constexpr std::size_t dimensions{ sizeof...(T_bounds) };
 	constexpr std::array<T_bound_type, dimensions> bounds{ T_bounds... };
-	constexpr auto result {
-		fgl::linear_matrix_utilities::make_offsets
-			<dimensions, T_major, T_bound_type>(bounds)
-	};
+	using fgl::linear_matrix_utilities::make_offsets;
+	constexpr auto result{ make_offsets<dimensions, T_major>(bounds) };
 	return result == expected;
 }
 

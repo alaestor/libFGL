@@ -3,90 +3,6 @@
 #define FGL_UTILITY_LINEAR_MATRIX_ALIAS_DYNAMIC_HPP_INCLUDED
 #include "../../environment/libfgl_compatibility_check.hpp"
 
-/// QUICK-START GUIDE
-/*
-using enum fgl::major;
-auto alias{ fgl::make_matrix_alias(arg, x, y, z) }; // row by default
-//auto alias{ fgl::make_matrix_alias(arg, row, x, y, z) };
-//auto alias{ fgl::make_matrix_alias(arg, column, x, y, z) };
-
-// arg can be either a begin iter or range. bounds-checked if range, size
-// must equal product of bounds
-
-int counter{};
-for (std::size_t i{}; i < x; ++i)
-for (std::size_t j{}; j < y; ++j)
-for (std::size_t l{}; l < z; ++l)
-{
-	alias.at({i,j,l}) = counter; // bounds-checked, may throw
-	//alias[{i,j,l}] = counter; // not bounds-checked
-	++counter;
-}
-
-alias.set_iterator(arg); // only bounds-checked if arg is a range
-
-alias.set_major(major);
-alias.switch_major(); // toggles between majors
-
-alias.set_bounds({x,y,z}); // not bounds-checked
-
-// simultanuous update
-alias.update(arg, {x,y,z}); // doesnt change major
-alias.update(arg, {x,y,z}, major);
-*/
-/// EXAMPLE PROGRAM
-/*
-#include <cstddef> // size_t
-#include <iostream> // cout, endl
-#include <vector>
-
-#include <fgl/utility/linear_matrix_alias/dynamic.hpp>
-
-int main()
-{
-	std::size_t x{ 3 }, y{ 3 }, z{ 3 };
-	std::vector<short> buffer;
-	buffer.resize(x*y*z);
-	for (short i{}; auto& v : buffer)
-		v = i++; // fill buffer
-
-	using enum fgl::major;
-	auto alias{ fgl::make_matrix_alias(buffer, row, x,y,z) };
-
-	std::cout << "row major " << x << 'x' << y << 'x' << z << ":\n";
-	for (std::size_t i{}; i < x; ++i)
-	for (std::size_t j{}; j < y; ++j)
-	for (std::size_t l{}; l < z; ++l)
-	{
-		std::cout << alias[{i, j, l}] << ", ";
-	}
-
-	++x, ++y, ++z;
-	buffer.resize(x*y*z);
-	for (short i{}; auto& v : buffer)
-		v = i++; // fill buffer
-
-	alias.update(buffer, {x,y,z}, column);
-
-	std::cout << "\n\ncolumn major " << x << 'x' << y << 'x' << z << ":\n";
-	for (std::size_t i{}; i < x; ++i)
-	for (std::size_t j{}; j < y; ++j)
-	for (std::size_t l{}; l < z; ++l)
-	{
-		std::cout << alias[{i, j, l}] << ", ";
-	}
-	std::cout << std::endl;
-}
-*/
-/// EXAMPLE OUTPUT
-/*
-row major 3x3x3:
-0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-
-column major 4x4x4:
-0, 16, 32, 48, 4, 20, 36, 52, 8, 24, 40, 56, 12, 28, 44, 60, 1, 17, 33, 49, 5, 21, 37, 53, 9, 25, 41, 57, 13, 29, 45, 61, 2, 18, 34, 50, 6, 22, 38, 54, 10, 26, 42, 58, 14, 30, 46, 62, 3, 19, 35, 51, 7, 23, 39, 55, 11, 27, 43, 59, 15, 31, 47, 63,
-*/
-
 #include <cstddef> // size_t
 #include <stdexcept> // invalid_argument, out_of_range
 #include <iterator> // contiguous_iterator iter_difference_t
@@ -98,7 +14,29 @@ column major 4x4x4:
 
 namespace fgl {
 
-/*A multi-dimensional alias to a contiguous range with dynamic bounds*/
+/**
+@file
+
+@example example/fgl/utility/linear_matrix_alias/dynamic.cpp
+	An example for @ref group-utility-lma_dynamic
+
+@defgroup group-utility-lma_dynamic Linear Matrix Alias (dynamic)
+
+@brief A linear matrix alias which prioritizes run-time flexibility.
+
+@see the example program
+	@ref example/fgl/utility/linear_matrix_alias/dynamic.cpp
+@{
+*/
+
+/**
+@brief A linear matrix alias which prioritizes run-time flexibility.
+@details Unlike the <tt>@ref static_linear_matrix_alias</tt>, the bounds and
+	major order of the dynamic alias can be changed at run-time. However the
+	number of dimensions must still be known at compile-time.
+@tparam T_iter The underlying linear contiguous iterator type
+@tparam T_dimensions The number of dimensions
+*/
 template <std::contiguous_iterator T_iter, std::size_t T_dimensions>
 class dynamic_linear_matrix_alias
 {
@@ -106,11 +44,18 @@ public:
 	using array_t = std::array<std::size_t, T_dimensions>;
 	using difference_type = std::iter_difference_t<T_iter>;
 
+	///@{ @name Constructors
+
 	dynamic_linear_matrix_alias() = delete;
 	dynamic_linear_matrix_alias(const dynamic_linear_matrix_alias&) = delete;
 	dynamic_linear_matrix_alias(dynamic_linear_matrix_alias&&) = delete;
 	void operator=(const dynamic_linear_matrix_alias&) = delete;
 
+	/**
+	@brief Constructs a dynamic linear matrix alias from an iterator
+	@param iter The underlying iterator to the beginning of the linear
+		contiguous range to alias
+	*/
 	[[nodiscard]] explicit constexpr dynamic_linear_matrix_alias(
 		T_iter iter,
 		const array_t& bounds,
@@ -129,43 +74,61 @@ public:
 		m_iter(iter)
 	{}
 
+	/**
+	@brief Constructs a dynamic linear matrix alias from a range
+	@param range The contiguous range from which the underlying iterator is
+		taken. The product of the multi-dimensional bounds must equal the
+		size of the range.
+	@throws std::invalid_argument if the range size does not equal the product
+		of the multi-dimensional bounds
+	*/
 	[[nodiscard]] explicit constexpr dynamic_linear_matrix_alias(
 		std::ranges::contiguous_range auto& range,
 		const array_t& bounds,
 		const major major = major::row)
 	: dynamic_linear_matrix_alias(std::ranges::begin(range), bounds, major)
 	{ check_range_bounds(range, bounds); }
+	///@}
 
+	///@returns The static number of dimensions
 	[[nodiscard]] constexpr std::size_t dimensions() const noexcept
 	{ return T_dimensions; }
 
+	///@returns A @c const reference to the array of multi-dimensional bounds.
 	[[nodiscard]] constexpr const array_t& bounds() const noexcept
 	{ return m_bounds; }
 
+	/// Changes the bounds of the matrix (not bounds-checked)
 	constexpr void set_bounds(const array_t& bounds) noexcept
 	{
 		m_bounds = bounds;
 		recalculate_offsets();
 	}
 
+	///@returns A @c const reference to the array of multi-dimensional offsets.
 	[[nodiscard]] constexpr const array_t& offsets() const noexcept
 	{ return m_offsets; }
 
+	///@returns The major order of the matrix
 	[[nodiscard]] constexpr major get_major() const noexcept
 	{ return m_major; }
 
+	///@returns @c true if the major order is @c row , @c false otherwise
 	[[nodiscard]] constexpr bool is_row_major() const noexcept
 	{ return get_major() == fgl::major::row; }
 
+	///@returns @c true if the major order is @c column , @c false otherwise
 	[[nodiscard]] constexpr bool is_column_major() const noexcept
 	{ return get_major() == fgl::major::column; }
 
+	/// Toggles between major orders
 	constexpr void switch_major() noexcept
 	{
 		m_major = is_row_major() ? major::column : major::row;
 		recalculate_offsets();
 	}
 
+	/// Sets the major order to @p new_major
 	constexpr void set_major(const fgl::major new_major) noexcept
 	{
 		if (m_major != new_major)
@@ -175,12 +138,25 @@ public:
 		}
 	}
 
+	/// @returns The underlying linear iterator
 	[[nodiscard]] constexpr auto iterator() const noexcept
 	{ return m_iter; }
 
+	/**
+	@brief Changes the underlying linear iterator. Not bounds-checked.
+	@param iter The new underlying iterator. Not bounds-checked.
+	*/
 	constexpr void set_iterator(T_iter iter) noexcept
 	{ m_iter = iter; }
 
+	/**
+	@brief Changes the underlying linear iterator.
+	@param range The contiguous range from which the underlying iterator is
+		taken. The product of the multi-dimensional bounds must equal the
+		size of the range.
+	@throws std::invalid_argument if the range size does not equal the product
+		of the multi-dimensional bounds
+	*/
 	template <std::ranges::contiguous_range T_range>
 	requires std::same_as<std::ranges::iterator_t<T_range>, T_iter>
 	constexpr void set_iterator(T_range& range)
@@ -189,12 +165,23 @@ public:
 		set_iterator(std::ranges::begin(range));
 	}
 
+	/**
+	@brief Changes the underlying linear iterator and matrix bounds.
+	@param iter The new underlying iterator. Not bounds-checked.
+	@param bounds The new multi-dimensional bounds of the matrix.
+	*/
 	constexpr void update(T_iter iter, const array_t& bounds) noexcept
 	{
 		set_iterator(iter);
 		set_bounds(bounds);
 	}
 
+	/**
+	@brief Changes the underlying linear iterator, matrix bounds, and major.
+	@param iter The new underlying iterator. Not bounds-checked.
+	@param bounds The new multi-dimensional bounds of the matrix.
+	@param new_major The new major order of the matrix.
+	*/
 	constexpr void update(
 		T_iter iter,
 		const array_t& bounds,
@@ -204,6 +191,15 @@ public:
 		update(iter, bounds);
 	}
 
+	/**
+	@brief Changes the underlying linear iterator and matrix bounds.
+	@param range The contiguous range from which the underlying iterator is
+		taken. The product of the multi-dimensional @p bounds must equal the
+		size of the range.
+	@param bounds The new multi-dimensional bounds of the matrix.
+	@throws std::invalid_argument if the range size does not equal the product
+		of the @p bounds
+	*/
 	template <std::ranges::contiguous_range T_range>
 	requires std::same_as<std::ranges::iterator_t<T_range>, T_iter>
 	constexpr void update(T_range& range, const array_t& bounds)
@@ -212,6 +208,16 @@ public:
 		update(std::ranges::begin(range), bounds);
 	}
 
+	/**
+	@brief Changes the underlying linear iterator, matrix bounds, and major.
+	@param range The contiguous range from which the underlying iterator is
+		taken. The product of the multi-dimensional @p bounds must equal the
+		size of the range.
+	@param bounds The new multi-dimensional bounds of the matrix.
+	@param new_major The new major order of the matrix.
+	@throws std::invalid_argument if the range size does not equal the product
+		of the @p bounds
+	*/
 	template <std::ranges::contiguous_range T_range>
 	requires std::same_as<std::ranges::iterator_t<T_range>, T_iter>
 	constexpr void update(
@@ -224,7 +230,11 @@ public:
 		update(std::ranges::begin(range), bounds);
 	}
 
-	// converts multi-dimensional indexes to the linear index
+	/**
+	@brief Converts multi-dimensional alias indexes to a linear index.
+	@param indexes The multi-dimensional indexes to convert.
+	@returns The linear index.
+	*/
 	[[nodiscard]] constexpr
 	difference_type convert_indexes(const array_t& indexes) const noexcept
 	{
@@ -234,16 +244,52 @@ public:
 		);
 	}
 
-	// Unsafe: unchecked index. Example: 3D index via `obj[{x,y,z}]`
-	[[nodiscard]] constexpr auto& operator[](const array_t& indexes)
-	{ return m_iter[convert_indexes(indexes)]; }
+	///@{ @name Element Access
 
-	// Unsafe: unchecked index. Example: 3D index via `obj[{x,y,z}]`
+	/**
+	@brief Accesses the element corresponding to a multi-dimensional index.
+	@warning The indexes are bounds-checked by an assertion; this won't be
+		bounds-checked if @c NDEBUG is defined.
+	@param indexes The multi-dimensional indexes of the element to access.
+	@returns A reference to the element.
+	*/
+	[[nodiscard]] constexpr auto& operator[](const array_t& indexes)
+	{
+		FGL_DEBUG_CONSTEXPR_ASSERT(
+			not fgl::linear_matrix_utilities::out_of_bounds(
+				indexes,
+				m_bounds
+			)
+		);
+		return m_iter[convert_indexes(indexes)];
+	}
+
+	/**
+	@brief Accesses the element corresponding to a multi-dimensional index.
+	@warning The indexes are bounds-checked by an assertion; this won't be
+		bounds-checked if @c NDEBUG is defined.
+	@param indexes The multi-dimensional indexes of the element to access.
+	@returns A <tt>const</tt>-qualified reference to the element.
+	*/
 	[[nodiscard]] constexpr
 	const auto& operator[](const array_t& indexes) const
-	{ return m_iter[convert_indexes(indexes)]; }
+	{
+		FGL_DEBUG_CONSTEXPR_ASSERT(
+			not fgl::linear_matrix_utilities::out_of_bounds(
+				indexes,
+				m_bounds
+			)
+		);
+		return m_iter[convert_indexes(indexes)];
+	}
 
-	// Bounds-checked index. Example: 3D index via `obj.at({x,y,z})`
+	/**
+	@brief Safely accesses the element corresponding to a multi-dimensional
+		index.
+	@param indexes The multi-dimensional indexes of the element to access.
+	@returns A reference to the element.
+	@throws std::out_of_range If an index is out of bounds
+	*/
 	[[nodiscard]] constexpr auto& at(const array_t& indexes)
 	{
 		fgl::linear_matrix_utilities::check_index_bounds
@@ -251,15 +297,24 @@ public:
 		return operator[](indexes);
 	}
 
-	// const bounds-checked index. Example: 3D index via `obj.at({x,y,z})`
+	/**
+	@brief Safely accesses the element corresponding to a multi-dimensional
+		index.
+	@param indexes The multi-dimensional indexes of the element to access.
+	@returns A <tt>const</tt>-qualified reference to the element.
+	@throws std::out_of_range If an index is out of bounds
+	*/
 	[[nodiscard]] constexpr const auto& at(const array_t& indexes) const
 	{
 		fgl::linear_matrix_utilities::check_index_bounds
 			<T_dimensions>(indexes, m_bounds);
 		return operator[](indexes);
 	}
+	///@}
 
 private:
+
+	/// Recalculates @ref m_offsets based on @ref m_bounds and @ref m_major .
 	constexpr void recalculate_offsets() noexcept
 	{
 		if (is_row_major())
@@ -274,6 +329,7 @@ private:
 		}
 	}
 
+	/// Checks that the @p range size equals the product of the @p bounds .
 	static constexpr void check_range_bounds(
 		const std::ranges::contiguous_range auto& range,
 		const array_t& bounds)
@@ -307,9 +363,31 @@ dynamic_linear_matrix_alias(
 )->dynamic_linear_matrix_alias<std::ranges::iterator_t<T_range>, T_dimensions>;
 
 
-/// Helper factories
+/**
+@{ @name Dynamic Alias Helper factories
+@details @parblock
+	The following functions are helper factories for creating dynamic linear
+	matrix aliases. They exist to simplify the noisy casts and @c std::array
+	temporary that would often be used when construct a dynamic alias.
 
-// constructs a row major dynamic dimensional alias from an iterator
+	The simplified syntax:
+	@code
+	auto alias{ make_matrix_alias(iter, x,y,z) };
+	auto alias{ make_matrix_alias(iter, major::column, x,y,z) };
+	auto alias{ make_matrix_alias(range, x,y,z) };
+	auto alias{ make_matrix_alias(range, major::column, x,y,z) };
+	@endcode
+
+@endparblock
+
+@param iter The contiguous iterator which is used to construct the alias.
+@param range The contiguous range which is used to construct the
+	alias. (bounds-checked)
+@param major The major order of the matrix.
+@param bounds The multi-dimensional bounds of the matrix.
+*/
+
+/// Constructs a row major dynamic matrix alias from an iterator
 [[nodiscard]] constexpr inline auto make_matrix_alias(
 	std::contiguous_iterator auto iter,
 	const std::convertible_to<std::size_t> auto ... bounds)
@@ -320,7 +398,7 @@ noexcept
 	);
 }
 
-// constructs a dynamic dimensional alias from an iterator
+/// Constructs a dynamic matrix alias from an iterator
 [[nodiscard]] constexpr inline auto make_matrix_alias(
 	std::contiguous_iterator auto iter,
 	const major major,
@@ -332,7 +410,7 @@ noexcept
 	);
 }
 
-// constructs a row major dynamic dimensional alias from a bounds-checked range
+/// Constructs a row major dynamic matrix alias from a bounds-checked range
 [[nodiscard]] constexpr inline auto make_matrix_alias(
 	std::ranges::contiguous_range auto& range,
 	const std::convertible_to<std::size_t> auto ... bounds)
@@ -342,7 +420,7 @@ noexcept
 	);
 }
 
-// constructs a dynamic dimensional alias from a bounds-checked range
+/// Constructs a dynamic matrix alias from a bounds-checked range
 [[nodiscard]] constexpr inline auto make_matrix_alias(
 	std::ranges::contiguous_range auto& range,
 	const major major,
@@ -353,6 +431,9 @@ noexcept
 	);
 }
 
+///@}
+
+///@}
 }// namespace fgl
 
 #endif // FGL_UTILITY_LINEAR_MATRIX_ALIAS_DYNAMIC_HPP_INCLUDED

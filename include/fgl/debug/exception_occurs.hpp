@@ -3,102 +3,92 @@
 #define FGL_DEBUG_EXCEPTION_OCCURS_HPP_INCLUDED
 #include "../environment/libfgl_compatibility_check.hpp"
 
-/// QUICK-START GUIDE
-/*
-An immediate try-catch lambda wrapper which can be used to easily convert
-exceptions to `bool`. Useful for testing and "inline" exception handling.
+/**
+@file
 
-// assertions always true
-assert(FGL_DEBUG_EXCEPTION_OCCURS( throw int ));
-assert(FGL_DEBUG_EXCEPTION_OCCURS( func_always_throws() ));
-assert(!FGL_DEBUG_EXCEPTION_OCCURS( func_never_throws() ));
-assert(!FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS( std::exception, func_never_throws() ));
-assert(FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS( expected_e, func_throws_expected_e() ));
-assert(!FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS( different_e, func_throws_expected_e() ));
+@example example/fgl/debug/exception_occurs.cpp
+	An example for @ref group-debug-exception_occurs
 
-// if you #define FGL_DEBUG_EXCEPTION_OCCURS_SHORT_MACROS or FGL_SHORT_MACROS
+@defgroup group-debug-exception_occurs Exception Occurs
 
-assert(exception_occurs( throw int ));
-assert(exception_occurs( func_always_throws() ));
-assert(!exception_occurs( func_never_throws() ));
-assert(!specific_exception_occurs( std::exception, func_never_throws() ));
-assert(specific_exception_occurs( expected_e, func_throws_expected_e() ));
+@brief Exception-to-bool conversion macros
 
-// note: `excpected_e` exception isn't caught and will propogate.
-try{ specific_exception_occurs( different_e, func_throws_expected_e() ); }
-catch(expected_e&)
-{
-	// we get here
-}
+@details
+	Exception-to-bool conversion fascilitated by an immediate try-catch lambda
+	wrapper. Useful for testing and "inline" exception handling.
 
-// example of dealing with a stupid_lib::Thing factory
-stupid_lib::Thing thing;
+	@remarks Error handling designs which rely on exception-to-bool conversions
+	are almost always bad. Aside from making exception tests easier to read,
+	this should only be employed in niche circumstances and not used as an
+	error-handling design strategy. With that said; while exceptions should be
+	exceptional, some libraries are stupid and this can be used to help
+	encapsulate their stupidity in a relatively clean and readable way.
 
-while (specific_exception_occurs(
-	stupid_lib::busy,
-	thing = stupid_lib::make_thing()))
-{
-	wait_a_bit();
-}
-
-use(thing);
-
-
-// A NOTE ABOUT ERROR-HANDLING DESIGN
-
-It's worth noting that the idea of using exception-to-bool conversions for
-error handling is bad. Aside from making exception tests easier to read,
-this should only be employed in niche circumstances and not used as an
-error-handling design strategy. Exceptions should be exceptional, but some
-libraries are stupid and this can help contain their stupidity in a
-relatively clean and readable way.
+	@see the example program @ref example/fgl/debug/exception_occurs.cpp
+@{
 */
 
-#ifdef FGL_SHORT_MACROS
-	#define FGL_DEBUG_EXCEPTION_OCCURS_SHORT_MACROS
-#endif // ifdef FGL_SIMPLE_MACROS
-
 #ifndef FGL_DEBUG_EXCEPTION_OCCURS
-///////////////////////////////////////////////////////////////////////////////
+	/**
+	@brief An immediate lambda wrapper which catches any exception
+	@param expression An expression which will be evaluated within a
+		<tt>try</tt> block.
+	@returns <tt>true</tt> if an exception was caught, otherwise
+		<tt>false</tt>.
+	*/
 	#define FGL_DEBUG_EXCEPTION_OCCURS(expression) \
 		([&]() -> bool {\
 		try{ expression; return false; }\
 		catch(...){ return true; }}())
-///////////////////////////////////////////////////////////////////////////////
 #else
 	#error FGL_DEBUG_EXCEPTION_OCCURS already defined
 #endif // ifndef FGL_DEBUG_EXCEPTION_OCCURS
 
 #ifndef FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS
-///////////////////////////////////////////////////////////////////////////////
+	/**
+	@brief An immediate lambda wrapper which only catches a specific exception.
+	@param exception The specific exception type to <tt>catch</tt>.
+	@param expression An expression which will be evaluated within a
+		<tt>try</tt> block.
+	@note Caught exceptions which aren't the specified <tt>exception</tt> are
+		re-thrown.
+	*/
 	#define FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS(exception, expression) \
 		([&]() -> bool {\
 		try{ expression; return false; }\
 		catch(const exception &){ return true; }\
 		catch(...){ throw; }}())
-///////////////////////////////////////////////////////////////////////////////
 #else
 	#error FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS already defined
 #endif // ifndef FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS
 
-// Opt-in short macros to avoid collisions
+/**
+@{ @name Opt-in Short Macros
+@ref page-fgl-macros
+*/
+#ifdef FGL_SHORT_MACROS
+	/// The Opt-in short macro symbol
+	#define FGL_DEBUG_EXCEPTION_OCCURS_SHORT_MACROS
+#endif // ifdef FGL_SIMPLE_MACROS
+
 #ifdef FGL_DEBUG_EXCEPTION_OCCURS_SHORT_MACROS
 	#ifndef exception_occurs
-///////////////////////////////////////////////////////////////////////////////
+		/// Alias for <tt>@ref FGL_DEBUG_EXCEPTION_OCCURS()</tt>
 		#define exception_occurs(expression) \
 			FGL_DEBUG_EXCEPTION_OCCURS(expression)
-///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error exception_occurs already defined
 	#endif // exception_occurs
 	#ifndef specific_exception_occurs
-///////////////////////////////////////////////////////////////////////////////
+		/// Alias for <tt>@ref FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS()</tt>
 		#define specific_exception_occurs(exception, expression) \
 			FGL_DEBUG_SPECIFIC_EXCEPTION_OCCURS(exception, expression)
-///////////////////////////////////////////////////////////////////////////////
 	#else
 		#error specific_exception_occurs already defined
 	#endif // specific_exception_occurs
 #endif // ifdef FGL_DEBUG_EXCEPTION_OCCURS_SHORT_MACROS
+///@} opt-in short macros
+
+///@} group-debug-exception_occurs
 
 #endif // FGL_DEBUG_EXCEPTION_OCCURS_HPP_INCLUDED

@@ -20,7 +20,7 @@ TEST_ASM_DIR=$(TEST_OUT_DIR)/asm
 
 PROJECT_LANGUAGE_SPECIFICATION= -std=c++20
 PROJECT_WARNING= -Winvalid-imported-macros
-PROJECT_CODEGEN= -fno-omit-frame-pointer -fno-rtti
+PROJECT_CODEGEN= -fno-omit-frame-pointer -fno-rtti -fconstexpr-ops-limit=67108864
 PROJECT_LINKAGE= -shared-libgcc
 PROJECT_INCLUDES= -I"$(ROOT)/include/"
 PROJECT_LIBRARIES=

@@ -54,9 +54,9 @@ std::string sfmt(
 int main()
 {
 	std::stringstream sstream;
-	fgl::debug::output::stream(sstream);
+	fgl::debug::output::stream = sstream;
 	fgl::debug::output::format_head = [](std::string_view) { return ""; };
-	fgl::debug::output::priority_threshold(fgl::debug::priority::minimum);
+	fgl::debug::output::priority_threshold = fgl::debug::priority::minimum;
 	fgl::debug::output_config<fgl::debug::fixme>::formatter = fixme_fmt;
 
 	const auto last_output{

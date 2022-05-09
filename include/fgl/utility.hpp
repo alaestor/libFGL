@@ -4,6 +4,20 @@
 
 // should contain all `utility/*.hpp`
 
+/**
+@page page-fgl-header-utility libFGL Utilities
+@details
+	<tt>#include <fgl/utility.hpp></tt> provides the following:
+	- @ref group-utility-bitwise
+	- @ref group-utility-enumerate
+	- @subpage page-fgl-header-utility-linear_matrix_alias
+	- @ref group-utility-make_byte_array
+	- @ref group-utility-matrix
+	- @ref group-utility-random
+	- @ref group-utility-sleep
+	- @ref group-utility-zip
+*/
+
 #include "./utility/bitwise.hpp"
 #include "./utility/circular_iterator.hpp"
 #include "./utility/enumerate.hpp"

@@ -61,10 +61,10 @@ std::string result(const auto v)
 int main()
 {
 	std::stringstream sstream;
-	fgl::debug::output::stream(sstream);
-	// unused in current implementation:
+	fgl::debug::output::stream = sstream;
+	// format_head is unused within the current test implementation:
 	fgl::debug::output::format_head = [](std::string_view) { return ""; };
-	fgl::debug::output::priority_threshold(fgl::debug::priority::minimum);
+	fgl::debug::output::priority_threshold = fgl::debug::priority::minimum;
 	fgl::debug::output_config<fgl::debug::echo>::formatter = echo_fmt;
 
 	const auto last_output{

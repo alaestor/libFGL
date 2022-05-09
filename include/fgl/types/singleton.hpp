@@ -3,57 +3,60 @@
 #define FGL_TYPES_SINGLETON_HPP_INCLUDED
 #include "../environment/libfgl_compatibility_check.hpp"
 
-/// QUICK-START GUIDE / EXAMPLE PROGRAM
-/*
-	#include <cassert>
-	#include <fgl/types/singleton.hpp>
+namespace fgl {
 
-	class obj_impl
-	{
-		FGL_PATTERN_SINGLETON_BOILERPLATE(obj); // optional
-		public:
-		int data{ 0 };
-	};
-	using obj = fgl::singleton<obj_impl>;
+/**
+@file
 
-	void f1()
-	{
-		obj::instance().data = 1337;
-	}
+@example example/fgl/types/singleton.cpp
+	An example for @ref group-types-singleton
 
-	int main()
-	{
-		f();
-		assert(obj::instance().data == 1337);
-	}
+@defgroup group-types-singleton Singleton
+
+@brief Type-based static singleton template
+
+@details @parblock
+
+	@attention Use of <tt>fgl::singleton</tt> is discouraged. A more idiomatic
+		C++ design would be to use <tt>static</tt> members and methods with a
+		deleted constructor. This template is provided because the idiomatic
+		design may not always be possible due to other design constraints or
+		situations where the more traditional "singleton pattern" may be more
+		desirable for stylistic or clarity reasons.
+
+	The <tt>fgl::singleton</tt> template can be used to create a
+	"singleton instance" of a type. It doesn't require the template argument
+	to be a typical "singleton-exclusive" object, or have private constructors,
+	etc. Any type that satisfies the <tt>std::default_initializable</tt>
+	concept can be used with the singleton template.
+
+	For example, <tt>fgl::singleton<int></tt> is a valid singleton whose
+	<tt>@ref instance()</tt> method will return an <tt>int&</tt> to a
+	statically declared <tt>int</tt>.
+
+	Contrary to the name, there can be multiple singleton instances of
+	the same type, so desired.
+
+	@note Despite the requirement that @p T satisfy the
+		<tt>std::default_initializable</tt> concept, the template isn't
+		constrained by it to avoid "incomplete type" issues which would
+		otherwise complicate object definitions.
+
+	@endparblock
+
+@see the example program @ref example/fgl/types/singleton.cpp
+@{
 */
-/*
-Type-based static singleton pattern template.
-
-NOTE: General use of `fgl::singleton` is discouraged**. Prefer `static inline`
-members and methods with deleted constructors where possible.
-
-However, this will continue to be provided because there are still cases where
-this singleton template design is desired.
-
-FFGL singleton can be used to create a "singleton instance" of a type that
-wouldn't otherwise be a singleton. It doesn't  require the the template type
-to be a typical "singleton-exclusive" object (*Normally, types intended to be
-used as singletons are exclusively singletons and only have a private
-constructor and delete the copy and move constructors, along with the
-assignment operator*). Any type that satisfies the standard
-`std::default_initializable` concept can be used with the singleton template.
-For example, `fgl::singleton<int>` is a valid singleton whose `instance()`
-method will return an `int&` to a static `int`.
-
-Note: Despite the requirement that `T` satisfy the `std::default_initializable`
-concept, the singleton template isn't constrained by it due to
-"incomplete type" issues which would complicate object definitions.
-*/
-
-#include <type_traits>
 
 #ifndef FGL_SINGLETON_BOILERPLATE
+	/**
+	@details
+		Defines a default constructor, deletes the copy and move constructors,
+		deletes the assignment operator, and friends the singleton template.
+		Intended to be used within the <tt>private</tt> section when defining
+		a singleton-exclusive type.
+	@param class_name The name of the class
+	*/
 	#define FGL_SINGLETON_BOILERPLATE(class_name) \
 		friend class fgl::singleton<class_name>;\
 		class_name() = default;\
@@ -64,23 +67,51 @@ concept, the singleton template isn't constrained by it due to
 	#error FGL_SINGLETON_BOILERPLATE already defined
 #endif // FGL_SINGLETON_BOILERPLATE
 
-namespace fgl {
-
+/**
+@brief A singleton template which can access a static instance of @p T
+@copydetails group-types-singleton
+@tparam T The type to be statically instantiated
+*/
 template <typename T>
 class singleton final
 {
-	singleton() = delete;
-	singleton(const singleton&) = delete;
-	~singleton() = delete;
-	void operator=(const singleton&) = delete;
+	singleton(auto&&...) = delete; ///< should never be instantiated
 
 public:
+
+	/// @returns A reference to the static singleton instance
 	static T& instance() noexcept
 	{
 		static T instance{};
 		return instance;
 	}
 };
+
+/**
+@brief A not-so-singleton template which can access multiple instances of @p T
+@see fgl::singleton
+@tparam T The type to be statically instantiated
+*/
+template <typename T>
+class multiton final
+{
+	multiton(auto&&...) = delete; ///< should never be instantiated
+
+public:
+
+	/**
+	@tparam T_guid A number to uniquely identify the instance
+	@returns A reference to the @p T_guid static instance
+	*/
+	template <unsigned long long T_guid>
+	static T& instance() noexcept
+	{
+		static T instance{};
+		return instance;
+	}
+};
+
+///@}
 
 }// namespace fgl
 

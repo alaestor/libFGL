@@ -85,8 +85,9 @@ constexpr bool test_stopwatch()
 			constexpr_assert(laps[i] == durations[i]);
 	}
 	constexpr_assert(sw.elapsed() == time_points.back() - time_points.front());
-	constexpr_assert(sw.elapsed_to_lap(sw.number_of_laps()) == sw.elapsed());
-	constexpr_assert(sw.elapsed_since_lap(0) == sw.elapsed());
+	constexpr_assert(
+		sw.elapsed_between_laps(0, sw.number_of_laps()) == sw.elapsed()
+	);
 	constexpr_assert(test_statistics(sw.calculate_statistics()));
 	return true;
 }

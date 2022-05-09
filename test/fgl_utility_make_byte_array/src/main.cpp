@@ -7,7 +7,7 @@
 #include <fgl/utility/make_byte_array.hpp>
 
 #define TEST_CSTRING_LITERAL "\x12\x54\xAB\xFF"
-#define TEST_BYTES_LITERAL "\x12\x54\xAB\xFF"_bytes
+#define TEST_BYTES_LITERAL "\x12\x54\xAB\xFF"_barray
 
 #ifdef NDEBUG
 	#error NDEBUG must not be defined for tests because they rely on assertions
