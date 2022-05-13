@@ -24,7 +24,7 @@ using cbyte = unsigned char;
 /**
 @brief Used to represent a C-style array
 @tparam T The type of the array elements
-@tparam N The number of elements in the array
+@tparam T_length The number of elements in the array
 */
 template <typename T, std::size_t T_length>
 using carray = T[T_length];

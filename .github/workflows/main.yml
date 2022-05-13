@@ -1,27 +1,48 @@
-name: Doxygen Action
-
+name: Automated Main Deploy Action
 on:
   push:
     branches: [ main ]
-
+env:
+  CONAN_REVISIONS_ENABLED: 1
 jobs:
-  build:
+  ### This job has multiple responsibilities; I'm assuming that
+  # it's cheaper to perform these all at once on the same instance.
+  deploy_doxygen_and_conan:
     runs-on: ubuntu-latest
     steps:
-    
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        submodules: 'true'
-    
-    - name: Doxygen Action
+        submodules: 'true' # only needed for Doxygen
+    ######
+    ## Doxygen generation and deployment
+    ######
+    - name: (Doxygen) Generate HTML
       uses: mattnotmitt/doxygen-action@v1.1.0
       with:
         doxyfile-path: "./Doxyfile"
         working-directory: "."
-    
-    - name: Deploy
+    - name: (Doxygen) Deploy HTML on Github Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: "./docs/html" # Doxyfile's output dir + html subfolder
+    ######
+    ## Conan creation and deployment
+    ######
+    - name: (Conan) Get Conan
+      uses: turtlebrowser/get-conan@v1.0
+    - name: (Conan) Setup default profile
+      run: conan profile new default --detect
+    - name: (Conan) Create Conan libFGL package
+      run: conan create . "alaestor/${{ github.ref_name }}"
+    - name: (Conan) Create "libFGL/latest" alias
+      run: conan alias "libFGL/latest@alaestor/${{ github.ref_name }}" "libFGL/${{ github.ref_name }}-${{ github.sha }}@alaestor/${{ github.ref_name }}"
+    - name: (Conan) Add "fgl-conan" remote
+      run: conan remote add fgl-conan "https://fgl.jfrog.io/artifactory/api/conan/fgl-conan"
+    - name: (Conan) Authenticate to "fgl-conan" remote
+      run: conan user --password ${{ secrets.FGL_CONAN_PASSWORD }} --remote fgl-conan ${{ secrets.FGL_CONAN_EMAIL }}
+    - name: (Conan) Upload libFGL package
+      run: conan upload --all --remote fgl-conan --confirm "libFGL/${{ github.ref_name }}-${{ github.sha }}@alaestor/${{ github.ref_name }}"
+    - name: (Conan) Upload libFGL latest alias
+      run: conan upload --remote fgl-conan --confirm "libFGL/latest@alaestor/${{ github.ref_name }}"

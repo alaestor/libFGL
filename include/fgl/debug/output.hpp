@@ -171,6 +171,7 @@ concept output_handler = output_channel<T> && output_formatter<T, T_value>;
 	bunch of typing... So I guess it stays! If you have a better idea, for the
 	sake of my sanity, <b>please</b> let me know.
 @endinternal
+@todo should this be a macro?
 */
 template
 <

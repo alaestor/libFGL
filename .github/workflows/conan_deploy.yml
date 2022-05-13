@@ -1,0 +1,48 @@
+name: Manual Conan Deploy Action
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Channel Name"
+        default: "volatile"
+        required: true
+      create_alias:
+        description: "Create alias"
+        type: boolean
+        default: true
+        required: true
+      alias_name:
+        description: "Alias Name"
+        default: "latest"
+        required: true
+env:
+  CONAN_REVISIONS_ENABLED: 1
+jobs:
+  deploy_conan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        submodules: 'false' # only needed for Doxygen
+    ######
+    ## Conan creation and deployment
+    ######
+    - name: (Conan) Get Conan
+      uses: turtlebrowser/get-conan@v1.0
+    - name: (Conan) Setup default profile
+      run: conan profile new default --detect
+    - name: (Conan) Create Conan libFGL package
+      run: conan create . "alaestor/${{ github.event.inputs.channel }}"
+    - name: (Conan) Create "libFGL/${{ github.event.inputs.alias_name }}" alias
+      if: ${{ github.event.inputs.create_alias }}
+      run: conan alias "libFGL/${{ github.event.inputs.alias_name }}@alaestor/${{ github.event.inputs.channel }}" "libFGL/${{ github.ref_name }}-${{ github.sha }}@alaestor/${{ github.event.inputs.channel }}"
+    - name: (Conan) Add "fgl-conan" remote
+      run: conan remote add fgl-conan "https://fgl.jfrog.io/artifactory/api/conan/fgl-conan"
+    - name: (Conan) Authenticate to "fgl-conan" remote
+      run: conan user --password ${{ secrets.FGL_CONAN_PASSWORD }} --remote fgl-conan ${{ secrets.FGL_CONAN_EMAIL }}
+    - name: (Conan) Upload libFGL package
+      run: conan upload --all --remote fgl-conan --confirm "libFGL/${{ github.ref_name }}-${{ github.sha }}@alaestor/${{ github.event.inputs.channel }}"
+    - name: (Conan) Upload libFGL ${{ github.event.inputs.alias_name }} alias
+      if: ${{ github.event.inputs.create_alias }}
+      run: conan upload --remote fgl-conan --confirm "libFGL/${{ github.event.inputs.alias_name }}@alaestor/${{ github.event.inputs.channel }}"

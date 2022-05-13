@@ -22,14 +22,18 @@ namespace fgl::traits {
 @{
 */
 
-/**
-@brief Satisfied if <tt>T</tt> is a "trivialClock" and is steady
-*/
+/// Satisfied if @p T is a @c std::chrono::is_clock_v .
 template <class T>
-concept steady_clock = std::chrono::is_clock_v<T> && T::is_steady;
+concept clock = std::chrono::is_clock_v<T>;
 
 /**
-@brief Satisfied if <tt>T</tt> is either a <tt>std::byte</tt>, <tt>char</tt>,
+@brief Satisfied if @p T is a <tt>@ref clock</tt> and @c T::is_steady .
+*/
+template <class T>
+concept steady_clock = clock<T> && T::is_steady;
+
+/**
+@brief Satisfied if @p T is either a <tt>std::byte</tt>, <tt>char</tt>,
 	or <tt>unsigned char</tt>.
 */
 template <typename T>
@@ -39,26 +43,21 @@ concept byte_type =
 	|| std::same_as<std::remove_cv_t<T>, unsigned char>
 ; // no one should use signed char for raw bytes...
 
-/**
-@brief Satisfied if <tt>T</tt> satisfies <tt>std::integral</tt> or
-	<tt>std::floating_point</tt>
-*/
+/// Satisfied if @p T is an integer or floating point type.
 template <typename T>
 concept numeric_type = std::integral<T> || std::floating_point<T>;
 
-/// Satisfied if <tt>T</tt> is a pointer
+/// Satisfied if @p T is a pointer.
 template <typename T>
 concept pointer_type = std::is_pointer_v<T>;
 
-/**
-@brief Satisfied if <tt>T1</tt> and <tt>T2</tt> do not satisfy
-	<tt>std::same_as</tt>
-*/
+
+/// Satisfied if @p T1 and @p T2 are not the same.
 template <typename T1, typename T2>
 concept not_same_as = (std::same_as<T1, T2> == false);
 
 /**
-@brief Satisfied if <tt>T_from</tt> is convertible to the
+@brief Satisfied if @p T_from is convertible to the
 	<tt>std::common_type_t<T_from, T_commons...></tt>
 @tparam T_from The type to convert from
 @tparam T_commons... Types which, alogn with <tt>T_from</tt>, are convertible
@@ -90,25 +89,22 @@ struct remove_all_pointers : std::conditional_t
 } // namespace internal
 ///@endcond
 
-/**
-@brief Removes all pointers from <tt>T</tt>, similar to
-	<tt>std::remove_all_extents_t</tt>
-*/
+/// Removes all pointers from @p T such that @c T**** becomes @c T
 template <typename T>
 using remove_all_pointers_t = typename internal::remove_all_pointers<T>::type;
 
 /**
 @brief Removes the pointer type, and then removes any <tt>const</tt> or
-	<tt>volatile</tt> qualifiers such that
-	<tt>const volatile * const volatile <i>type</i></tt> becomes
-	<tt><i>type</i></tt>
+	<tt>volatile</tt> qualifiers from @p T such that
+	<tt>const volatile * const volatile <i>T</i></tt> becomes
+	<tt><i>T</i></tt>
 */
 template <typename T>
 using remove_cvptr_t = typename std::remove_cv_t<std::remove_pointer_t<T>>;
 
 /**
-@brief Satisfied if <tt>T</tt> is a pointer (cv-removed) to <tt>void</tt> or a
-	<tt>ref fgl::traits::byte_type</tt>
+@brief Satisfied if @p T is a pointer (cv-removed) to <tt>void</tt> or a
+	<tt>@ref fgl::traits::byte_type</tt>
 @note it's common for C interfaces to use <tt>void*</tt> to represent raw
 	bytes. This must be checked separately. For this usecase, use
 	<tt>@ref fgl::traits::pointer_to_byte_or_void</tt>
@@ -122,20 +118,33 @@ concept pointer_to_byte =
 	)
 ;
 
-/// Satisfied if <tt>T</tt> is a pointer to anything but <tt>void</tt>
+/// Satisfied if @p T is a pointer to anything but <tt>void</tt>
 template <typename T>
 concept pointer_to_non_void =
 	std::is_pointer_v<T> && (!std::is_void_v<remove_cvptr_t<T>>)
 ;
 
-/// <tt>true</tt> is <tt>T</tt> is a <tt>const</tt>-qualified reference
+/// Satisfied if @p T is <tt>std::is_trivially_copyable</tt>
+template <typename T>
+concept trivially_copyable = std::is_trivially_copyable_v<T>;
+
+/**
+@brief Satisfied if @p T is a pointer to a
+	<tt>@ref fgl::traits::trivially_copyable</tt> type.
+*/
+template <typename T>
+concept pointer_to_trivially_copyable =
+	std::is_pointer_v<T> && trivially_copyable<std::remove_pointer_t<T>>
+;
+
+/// <tt>true</tt> is @p T is a <tt>const</tt>-qualified reference
 template <typename T>
 inline constexpr bool is_const_ref{
 	std::is_reference_v<T> && std::is_const_v<std::remove_reference_t<T>>
 };
 
 /**
-@brief <tt>true</tt> if <tt>T</tt> is a mutable, non-<tt>const</tt>-qualified
+@brief <tt>true</tt> if @p T is a mutable, non-<tt>const</tt>-qualified
 	reference
 */
 template <typename T>
@@ -145,14 +154,14 @@ inline constexpr bool is_nonconst_ref{
 
 /**
 @brief Adds a <tt>const</tt>-qualified lvalue refernece such that
-	<tt>T</tt> becomes <tt>const T&</tt>
+	@p T becomes <tt>const T&</tt>
 */
 template <typename T>
 using add_const_lvref_t = std::add_const_t<std::add_lvalue_reference_t<T>>;
 
 /**
 @brief  Adds a <tt>const</tt>-qualified rvalue reference such that
-	<tt>T</tt> becomes <tt>const T&&</tt>
+	@p T becomes <tt>const T&&</tt>
 */
 template <typename T>
 using add_const_rvref_t = std::add_const_t<std::add_rvalue_reference_t<T>>;

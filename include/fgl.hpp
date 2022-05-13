@@ -11,11 +11,24 @@
 
 /**
 @file
-@brief libFGL's "everything" header
-@details Includes all non-experimental headers and defines broad-scope
-	doxymentation.
+@brief libFGL's "(almost) everything" header
+@details Includes all non-experimental headers. The file itself also
+	contains general doxymentation for the library.
 @note Does not expose literals or opt-in macros.
 @see <tt>#include <@ref FGLM></tt>
+*/
+
+/**
+@page page-fgl-older_versions Older Versions & Documentation
+@parblock
+	The documentation found here is only accurate for the latest version
+	of libFGL, which is always the most recent state of the main github
+	branch. Documentation for older versions must be generated from source
+	by running <a href="https://www.doxygen.nl/">Doxygen</a> against the
+	@c Doxyfile in the root project directory. After that, the
+	documentation may be viewed by opening the @c docs/index.html file in
+	a web browser.
+@endparblock
 */
 
 /**
@@ -117,7 +130,7 @@
 	@parblock
 		<ul>
 		<li>
-			(WIP) <b>libFGL-vulkan</b> &mdash;  a simple and modern
+			(WIP) <b>libFGL-vulkan</b> &mdash; a simple and modern
 				interface for using Vulkan compute shaders.
 
 			Work In Progress ->

@@ -4,18 +4,63 @@
 #include <cstddef>
 #include <memory>
 
-/*
-	Flagged pointers use the least significant bit of a pointer
-	to encode boolean state. It requires the type to be larger
-	than char, and the address must be even (low bit zero).
-	Use alignas(2) to solve the "odd address" issue
-	where the low bit could be 1 in some environments.
+#include "../math/sqrt.hpp"
 
-	This header proves two classes. flagged_unique_ptr provides
-	RAII, custom deleter, and smartpointer support, where as
-	flagged_ptr is a raw pointer and provides itterative support.
+static_assert(
+    (std::uintptr_t{}, true),
+    "flagged_pointer: incompatible STL implementation"
+);
+
+static_assert(
+    sizeof(void*) == sizeof(std::byte*),
+    "flagged_pointer: incompatible environment"
+);
+
+static_assert(
+    sizeof(void*) == sizeof(void(*)()),
+    "flagged_pointer: incompatible environment"
+);
+
+namespace fgl {
+
+/**
+@brief A pointer whose least significant bits are encoded with boolean state
+@details Flagged pointers use the least significant bit of a pointer to encode
+	boolean state. It requires that the square root of the alignment of the
+	underlying type be greater than or equal to the number of bits used for
+	encoding.
+@warning Alignment and pointer representation may differ on some
+	platforms and implementations; therefore, usage of flagged pointers is
+	discouraged as it's not portable.
+@tparam T The pointer type
+@tparam T_bits The number of bits used to encode the boolean state; must be
+	less than or equal to the square root of the alignment of T
 */
+template <typename T, std::size_t T_bits = 1>
+requires (T_bits < fgl::sqrt(alignof(std::remove_pointer_t<T>)))
+class flagged_pointer
+{
+    std::uintptr_t m_manipulated_pointer;
 
+    [[nodiscard]] static consteval std::uintptr_t all_mask() noexcept
+    {
+        std::uintptr_t mask{ 0 };
+        for (std::size_t i{ 0 }; i < T_bits; ++i)
+            mask |= (1ull << i);
+        return mask;
+    }
+
+public:
+
+    [[nodiscard]] explicit
+    flagged_pointer(T pointer)
+    : m_manipulated_pointer(reinterpret_cast<std::uintptr_t>(pointer))
+    { assert((m_manipulated_pointer & all_mask()) == 0); }
+};
+
+} // namespace fgl
+
+/*
 namespace fgl {
 
 static constexpr bool OddPointerSafetyChecks = false;
@@ -411,5 +456,6 @@ class flagged_ptr : std::random_access_iterator_tag
 };
 
 } // namespace fgl
+//*/
 
 #endif // FGL_TYPES_FLAGGED_POINTER_HPP_INCLUDED

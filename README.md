@@ -10,7 +10,7 @@
 
 This is a modern C++ header-only library that dreams of growing up to be refactored into a module when the popular compilers figure it out and the lead maintainer stops being lazy. Its a miscellaneous assortment of in-house utilities intended to replace frequently duplicated flimsy spoons with sufficiently engineered shovels.
 
-**Breaking changes are a feature. No support. No guarentees. Not for third-party production use.**
+**Breaking changes are a feature. No support. No guarantees. Not for third-party production use.**
 
 Only GCC 12 or higher is officially compatible, but libFGL should work with any compiler which properly implements C++20.
 

@@ -25,6 +25,8 @@ namespace fgl {
 @{
 */
 
+///@todo i should rethink this https://www.youtube.com/watch?v=ABg4_EV5L3w
+
 /**
 @brief A wrapper type for string literals
 @details Due to how C++ works, string literals cannot be passed as non-type
