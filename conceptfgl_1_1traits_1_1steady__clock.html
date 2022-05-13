@@ -102,16 +102,17 @@ $(document).ready(function(){initNavTree('conceptfgl_1_1traits_1_1steady__clock.
 </div><!--header-->
 <div class="contents">
 
-<p>Satisfied if <code>T</code> is a "trivialClock" and is steady.  
+<p>Satisfied if <code>T</code> is a <code>clock</code> and <code>T::is_steady</code> .  
 <a href="conceptfgl_1_1traits_1_1steady__clock.html#details">More...</a></p>
 
 <p><code>#include &lt;fgl/types/traits.hpp&gt;</code></p>
 <h2 class="groupheader">Concept definition</h2>
 <div class="fragment"><div class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt;</div>
-<div class="line"><span class="keyword">concept </span><a class="code hl_concept" href="conceptfgl_1_1traits_1_1steady__clock.html">fgl::traits::steady_clock</a> =  std::chrono::is_clock_v&lt;T&gt; &amp;&amp; T::is_steady</div>
-<div class="ttc" id="aconceptfgl_1_1traits_1_1steady__clock_html"><div class="ttname"><a href="conceptfgl_1_1traits_1_1steady__clock.html">fgl::traits::steady_clock</a></div><div class="ttdoc">Satisfied if T is a &quot;trivialClock&quot; and is steady.</div><div class="ttdef"><b>Definition:</b> traits.hpp:29</div></div>
+<div class="line"><span class="keyword">concept </span><a class="code hl_concept" href="conceptfgl_1_1traits_1_1steady__clock.html">fgl::traits::steady_clock</a> =  <a class="code hl_concept" href="conceptfgl_1_1traits_1_1clock.html">clock&lt;T&gt;</a> &amp;&amp; T::is_steady</div>
+<div class="ttc" id="aconceptfgl_1_1traits_1_1clock_html"><div class="ttname"><a href="conceptfgl_1_1traits_1_1clock.html">fgl::traits::clock</a></div><div class="ttdoc">Satisfied if T is a std::chrono::is_clock_v .</div><div class="ttdef"><b>Definition:</b> traits.hpp:27</div></div>
+<div class="ttc" id="aconceptfgl_1_1traits_1_1steady__clock_html"><div class="ttname"><a href="conceptfgl_1_1traits_1_1steady__clock.html">fgl::traits::steady_clock</a></div><div class="ttdoc">Satisfied if T is a clock and T::is_steady .</div><div class="ttdef"><b>Definition:</b> traits.hpp:33</div></div>
 </div><!-- fragment --><a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p >Satisfied if <code>T</code> is a "trivialClock" and is steady. </p>
+<div class="textblock"><p >Satisfied if <code>T</code> is a <code>clock</code> and <code>T::is_steady</code> . </p>
 </div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

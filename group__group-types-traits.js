@@ -1,5 +1,6 @@
 var group__group_types_traits =
 [
+    [ "fgl::traits::clock", "conceptfgl_1_1traits_1_1clock.html", null ],
     [ "fgl::traits::steady_clock", "conceptfgl_1_1traits_1_1steady__clock.html", null ],
     [ "fgl::traits::byte_type", "conceptfgl_1_1traits_1_1byte__type.html", null ],
     [ "fgl::traits::numeric_type", "conceptfgl_1_1traits_1_1numeric__type.html", null ],
@@ -9,6 +10,8 @@ var group__group_types_traits =
     [ "fgl::traits::printable", "conceptfgl_1_1traits_1_1printable.html", null ],
     [ "fgl::traits::pointer_to_byte", "conceptfgl_1_1traits_1_1pointer__to__byte.html", null ],
     [ "fgl::traits::pointer_to_non_void", "conceptfgl_1_1traits_1_1pointer__to__non__void.html", null ],
+    [ "fgl::traits::trivially_copyable", "conceptfgl_1_1traits_1_1trivially__copyable.html", null ],
+    [ "fgl::traits::pointer_to_trivially_copyable", "conceptfgl_1_1traits_1_1pointer__to__trivially__copyable.html", null ],
     [ "fgl::traits::remove_all_pointers_t", "group__group-types-traits.html#gaf0e27a89b710846430329e6f017da49f", null ],
     [ "fgl::traits::remove_cvptr_t", "group__group-types-traits.html#ga30cfd52d562f63b982e6ea144a62ef9e", null ],
     [ "fgl::traits::add_const_lvref_t", "group__group-types-traits.html#ga7c146eb3a7a4f9c0c90c1af0b3592238", null ],

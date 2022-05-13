@@ -26,6 +26,7 @@ var NAVTREE =
 [
   [ "libFGL", "index.html", [
     [ "The Future Gadget Laboratory Library", "index.html", null ],
+    [ "Older Versions & Documentation", "page-fgl-older_versions.html", null ],
     [ "Getting Started", "page-fgl-getting_started.html", [
       [ "Official Compatibility", "page-fgl-getting_started.html#page-fgl-about-compatibility", null ],
       [ "Installing and using libFGL", "page-fgl-getting_started.html#page-fgl-getting_started-instrallation", null ],
@@ -61,7 +62,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"group__group-environment-build__info.html#ga72801cc29384d026244f267946394273"
+"group__group-debug-stopwatch.html#gae439e15a3a29267339eb1566adc78da9"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

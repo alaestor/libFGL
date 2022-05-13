@@ -116,20 +116,23 @@ $(document).ready(function(){initNavTree('traits_8hpp.html',''); initResizable()
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="concepts" name="concepts"></a>
 Concepts</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1clock.html">fgl::traits::clock</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is a <code>std::chrono::is_clock_v</code> . <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1steady__clock.html">fgl::traits::steady_clock</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is a "trivialClock" and is steady. <br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is a <code>clock</code> and <code>T::is_steady</code> . <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1byte__type.html">fgl::traits::byte_type</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is either a <code>std::byte</code>, <code>char</code>, or <code>unsigned char</code>. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1numeric__type.html">fgl::traits::numeric_type</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> satisfies <code>std::integral</code> or <code>std::floating_point</code> <br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is an integer or floating point type. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1pointer__type.html">fgl::traits::pointer_type</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is a pointer. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1not__same__as.html">fgl::traits::not_same_as</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T1</code> and <code>T2</code> do not satisfy <code>std::same_as</code> <br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T1</code> and <code>T2</code> are not the same. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1convertible__to__common.html">fgl::traits::convertible_to_common</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T_from</code> is convertible to the <code>std::common_type_t&lt;T_from, T_commons...&gt;</code> <br /></td></tr>
@@ -138,10 +141,16 @@ Concepts</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>std::ostream&amp; operator&lt;&lt;(std::ostream&amp;, T)</code> is defined. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1pointer__to__byte.html">fgl::traits::pointer_to_byte</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is a pointer (cv-removed) to <code>void</code> or a <code>ref <a class="el" href="conceptfgl_1_1traits_1_1byte__type.html" title="Satisfied if T is either a std::byte, char, or unsigned char.">fgl::traits::byte_type</a></code> <br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is a pointer (cv-removed) to <code>void</code> or a <code><a class="el" href="conceptfgl_1_1traits_1_1byte__type.html">fgl::traits::byte_type</a></code> <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1pointer__to__non__void.html">fgl::traits::pointer_to_non_void</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is a pointer to anything but <code>void</code> <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1trivially__copyable.html">fgl::traits::trivially_copyable</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is <code>std::is_trivially_copyable</code> <br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">concept &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="conceptfgl_1_1traits_1_1pointer__to__trivially__copyable.html">fgl::traits::pointer_to_trivially_copyable</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Satisfied if <code>T</code> is a pointer to a <code><a class="el" href="conceptfgl_1_1traits_1_1trivially__copyable.html">fgl::traits::trivially_copyable</a></code> type. <br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
@@ -149,12 +158,12 @@ Typedefs</h2></td></tr>
 <tr class="memitem:gaf0e27a89b710846430329e6f017da49f"><td class="memTemplParams" colspan="2">
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:gaf0e27a89b710846430329e6f017da49f"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>fgl::traits::remove_all_pointers_t</b> = typename internal::remove_all_pointers&lt; T &gt;::type</td></tr>
-<tr class="memdesc:gaf0e27a89b710846430329e6f017da49f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all pointers from <code>T</code>, similar to <code>std::remove_all_extents_t</code> <br /></td></tr>
+<tr class="memdesc:gaf0e27a89b710846430329e6f017da49f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes all pointers from <code>T</code> such that <code>T****</code> becomes <code>T</code>. <br /></td></tr>
 <tr class="separator:gaf0e27a89b710846430329e6f017da49f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga30cfd52d562f63b982e6ea144a62ef9e"><td class="memTemplParams" colspan="2">
 template&lt;typename T &gt; </td></tr>
 <tr class="memitem:ga30cfd52d562f63b982e6ea144a62ef9e"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><b>fgl::traits::remove_cvptr_t</b> = typename std::remove_cv_t&lt; std::remove_pointer_t&lt; T &gt; &gt;</td></tr>
-<tr class="memdesc:ga30cfd52d562f63b982e6ea144a62ef9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the pointer type, and then removes any <code>const</code> or <code>volatile</code> qualifiers such that <code>const volatile * const volatile <em>type</em></code> becomes <code><em>type</em></code> <br /></td></tr>
+<tr class="memdesc:ga30cfd52d562f63b982e6ea144a62ef9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes the pointer type, and then removes any <code>const</code> or <code>volatile</code> qualifiers from <code>T</code> such that <code>const volatile * const volatile <em>T</em></code> becomes <code><em>T</em></code> <br /></td></tr>
 <tr class="separator:ga30cfd52d562f63b982e6ea144a62ef9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga7c146eb3a7a4f9c0c90c1af0b3592238"><td class="memTemplParams" colspan="2">
 template&lt;typename T &gt; </td></tr>
