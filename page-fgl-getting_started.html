@@ -112,21 +112,22 @@ With Conan</h2>
 <li>
 If you don't have it already, install <a href="https://conan.io/">the Conan package manager</a>  </li>
 <li>
-Enable <a href="https://docs.conan.io/en/latest/versioning/revisions.html#how-to-activate-the-revisions">revisions</a> by adding <code>revisions_enabled=1</code> under <code></code>[general] in your <code>conan.conf</code> file (<code>~/.conan/conan.conf</code> on Linux, <code>userprofile%/.conan/conan.conf</code> on Windows).  </li>
+Enable <a href="https://docs.conan.io/en/latest/versioning/revisions.html#how-to-activate-the-revisions">Package Revisions</a> by adding <code>revisions_enabled=1</code> under <code>[general]</code> in your <code>conan.conf</code> file (<code>~/.conan/conan.conf</code> on Linux, and <code>%userprofile%/.conan/conan.conf</code> on Windows).  </li>
 <li>
 Add the libFGL remote by running <code>conan remote add fgl-conan <a href="https://fgl.jfrog.io/artifactory/api/conan/fgl-conan">https://fgl.jfrog.io/artifactory/api/conan/fgl-conan</a></code>  </li>
 <li>
 <p class="startli">Add libFGL as a <a href="https://docs.conan.io/en/latest/using_packages/conanfile_txt.html">conan dependency</a></p>
-<p class="interli">It's recommended to always use the latest version of libFGL by requiring the <code>latest</code> alias </p><div class="fragment"><div class="line">[<span class="keyword">requires</span>]</div>
-<div class="line">libFGL/latest@alaestor/stable</div>
-</div><!-- fragment --><p class="interli">Specific versions can be required by following the format <code>branch-commit</code> (e.g. <code>main-0123456789abcdef</code>). Only the <code>main</code> branch is automatically published when a new commit is pushed, but others may occasionally be manually packaged.</p>
-<dl class="section note"><dt>Note</dt><dd><p class="startdd">Some commits may not be available, including older commits before conan was supported.</p>
-<p class="interdd">You can query the list of available versions by running <code>conan search &ndash;remote=fgl-conan</code> (it may take a while).</p>
+<p class="interli">It's recommended to always use the latest version of libFGL by requiring the <code>latest</code> alias on the <code>main</code> channel </p><div class="fragment"><div class="line">[<span class="keyword">requires</span>]</div>
+<div class="line">libFGL/latest@alaestor/main</div>
+</div><!-- fragment --><p class="interli">Specific versions can be required by following the format <code>branch-commit</code>, and the <code>alaestor/CHANNEL</code> channel can be the name of the branch. For example: </p><div class="fragment"><div class="line">[<span class="keyword">requires</span>]</div>
+<div class="line">libFGL/main-0123456789abcdef@alaestor/main</div>
+</div><!-- fragment --><dl class="section note"><dt>Note</dt><dd><p class="startdd">Some commits may not be available, including older commits before conan was supported and commits on branches other than <code>main</code>. Only the <code>main</code> branch is automatically packaged when a new commit is pushed, but other branches may occasionally be manually packaged.</p>
+<p class="interdd">You can list all available versions by running <code>conan search "libFGL/*" --remote=fgl-conan</code> (it may take a while).</p>
 <p class="enddd"></p>
 </dd></dl>
-<dl class="section attention"><dt>Attention</dt><dd><p class="startdd">A "live at head" approach is strongly recommended: don't pin to a specific commit without good reason. <b>Breaking changes are a feature! When something breaks, it's usually for a good reason. </b></p>
-<p class="interdd">Only use versions from the <code>main</code> branch on the <code>stable</code> channel. Usage of versions from branches other than <code>main</code> , and versions released on channels other than <code>@alaestor/stable</code> are <b>strongly discouraged</b>.</p>
-<p class="enddd">Versions on the <code>@alaestor/volatile</code> channel are subject to random revisions and deletions without warning and should be viewed as "temporary"! They should avoided unless explicitly directed by a maintainer (for example, when being used temporarily as a trouble-shooting measure). </p>
+<dl class="section attention"><dt>Attention</dt><dd><p class="startdd">A "live at head" approach is strongly recommended: don't pin to a specific commit without good reason. <b>Breaking changes are a feature, and interfaces will often change for good reason!</b></p>
+<p class="interdd">Only use packages from the <code>main</code> branch which are packaged on the <code>@alaestor/main</code> and <code>@alaestor/stable</code> channels. Using other branches and channels are <b>strongly discouraged</b>.</p>
+<p class="enddd">Packages on the <code>@alaestor/volatile</code> channel are subject to random revisions and deletions without warning and should be viewed as <b>temporary</b>! They should avoided unless explicitly directed by a maintainer (for example, when being used temporarily as a trouble-shooting measure). </p>
 </dd></dl>
 </li>
 </ol>
@@ -189,8 +190,8 @@ Hello World</h2>
 <div class="fragment"><div class="line">g++ -std=c++20 -I<span class="stringliteral">&quot;your_path_to/libFGL/include&quot;</span> main.cpp -o main.exe</div>
 </div><!-- fragment --><p >Output: </p><div class="fragment"><div class="line">[GENERIC] Hello, world!</div>
 </div><!-- fragment --><p >libFGL extensions will often require more elaborate dependencies and compilation steps. Refer to the extension's documentation.</p>
-<dl class="section note"><dt>Note</dt><dd><p class="startdd">Depending on how your compiler arguments and environment configuration, you may need to include libFGL components with either <code>""</code> or <code>&lt;&gt;</code> include syntax.</p>
-<p class="enddd">Other than for testing, libFGL doesn't support any particular build systems, package systems, or IDEs. You're on your own. </p>
+<dl class="section note"><dt>Note</dt><dd><p class="startdd">Depending on how your compiler arguments and environment configuration, you may need to include libFGL components with either <code>""</code> or <code>&lt;&gt;</code> include syntax. Including as a system header is recommended to avoid superfluous warning messages from compilers which aren't officially compatible.</p>
+<p class="enddd">Other than for testing, libFGL doesn't have official guides or compatibility with any particular build systems or IDEs. You're on your own. </p>
 </dd></dl>
 <hr  />
  <h1><a class="anchor" id="page-fgl-getting_started-running_tests"></a>
@@ -223,7 +224,6 @@ Compiling and Running Tests</h1>
 <div class="line">      |                       ^~~~~~~~~~~~~~~~~~~~</div>
 <div class="line">     tup messages ***</div>
 <div class="line">     Command ID=3396 failed with return value 1</div>
-<div class="line"> 4) [1.384s] _private\experimenting: [C] main.cpp</div>
 <div class="line"> [      ]  85%</div>
 <div class="line">     tup: 1 job failed.</div>
 </div><!-- fragment --> <hr  />
