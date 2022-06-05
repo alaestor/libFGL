@@ -14,14 +14,19 @@ var annotated_dup =
         [ "simple_output_channel", "classfgl_1_1debug_1_1simple__output__channel.html", "classfgl_1_1debug_1_1simple__output__channel" ]
       ] ],
       [ "cbyte_ptr_wrapper", "structfgl_1_1cbyte__ptr__wrapper.html", "structfgl_1_1cbyte__ptr__wrapper" ],
+      [ "circular_iterator", "classfgl_1_1circular__iterator.html", "classfgl_1_1circular__iterator" ],
       [ "dynamic_linear_matrix_alias", "classfgl_1_1dynamic__linear__matrix__alias.html", "classfgl_1_1dynamic__linear__matrix__alias" ],
       [ "matrix", "classfgl_1_1matrix.html", "classfgl_1_1matrix" ],
       [ "multiton", "classfgl_1_1multiton.html", "classfgl_1_1multiton" ],
+      [ "not_null", "classfgl_1_1not__null.html", "classfgl_1_1not__null" ],
       [ "random", "structfgl_1_1random.html", "structfgl_1_1random" ],
       [ "singleton", "classfgl_1_1singleton.html", "classfgl_1_1singleton" ],
       [ "static_linear_matrix_alias", "classfgl_1_1static__linear__matrix__alias.html", "classfgl_1_1static__linear__matrix__alias" ],
       [ "static_linear_matrix_info", "structfgl_1_1static__linear__matrix__info.html", "structfgl_1_1static__linear__matrix__info" ],
       [ "string_literal", "structfgl_1_1string__literal.html", "structfgl_1_1string__literal" ]
+    ] ],
+    [ "lib", "namespacelib.html", [
+      [ "toggle_null", "structlib_1_1toggle__null.html", null ]
     ] ],
     [ "stupid_lib", null, [
       [ "busy", "structstupid__lib_1_1busy.html", null ],

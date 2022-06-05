@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['zip_0',['Zip',['../group__group-utility-zip.html',1,'']]]
+  ['type_20traits_0',['Type Traits',['../group__group-types-traits.html',1,'']]]
 ];

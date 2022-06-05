@@ -26,15 +26,26 @@ var NAVTREE =
 [
   [ "libFGL", "index.html", [
     [ "The Future Gadget Laboratory Library", "index.html", null ],
-    [ "Older Versions & Documentation", "page-fgl-older_versions.html", null ],
+    [ "Documentation for Older Versions", "page-fgl-older_versions.html", null ],
     [ "Getting Started", "page-fgl-getting_started.html", [
       [ "Official Compatibility", "page-fgl-getting_started.html#page-fgl-about-compatibility", null ],
-      [ "Installing and using libFGL", "page-fgl-getting_started.html#page-fgl-getting_started-instrallation", null ],
+      [ "Installing and using libFGL", "page-fgl-getting_started.html#page-fgl-getting_started-installation", [
+        [ "With Conan", "page-fgl-getting_started.html#page-fgl-getting_started-installation-conan", null ],
+        [ "Without Conan", "page-fgl-getting_started.html#page-fgl-getting_started-installation-standalone", null ],
+        [ "Hello World", "page-fgl-getting_started.html#page-fgl-getting_started-installation-example_program", null ]
+      ] ],
       [ "Compiling and Running Tests", "page-fgl-getting_started.html#page-fgl-getting_started-running_tests", null ],
       [ "Extentions for LibFGL", "page-fgl-getting_started.html#page-fgl-getting_started-extentions", null ]
     ] ],
     [ "About libFGL fascilities", "page-fgl-about.html", "page-fgl-about" ],
     [ "Components", "modules.html", "modules" ],
+    [ "Namespaces", "namespaces.html", [
+      [ "Namespace List", "namespaces.html", "namespaces_dup" ],
+      [ "Namespace Members", "namespacemembers.html", [
+        [ "All", "namespacemembers.html", null ],
+        [ "Functions", "namespacemembers_func.html", null ]
+      ] ]
+    ] ],
     [ "Concepts", "concepts.html", "concepts" ],
     [ "Classes", "annotated.html", [
       [ "Class List", "annotated.html", "annotated_dup" ],
@@ -62,7 +73,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"group__group-debug-stopwatch.html#gae439e15a3a29267339eb1566adc78da9"
+"group__group-debug-output.html#gae01b66b45a5aaadc4baf5629f495a73a"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

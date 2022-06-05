@@ -5,6 +5,7 @@ var group__group_types_traits =
     [ "fgl::traits::byte_type", "conceptfgl_1_1traits_1_1byte__type.html", null ],
     [ "fgl::traits::numeric_type", "conceptfgl_1_1traits_1_1numeric__type.html", null ],
     [ "fgl::traits::pointer_type", "conceptfgl_1_1traits_1_1pointer__type.html", null ],
+    [ "fgl::traits::null_comparable", "conceptfgl_1_1traits_1_1null__comparable.html", null ],
     [ "fgl::traits::not_same_as", "conceptfgl_1_1traits_1_1not__same__as.html", null ],
     [ "fgl::traits::convertible_to_common", "conceptfgl_1_1traits_1_1convertible__to__common.html", null ],
     [ "fgl::traits::printable", "conceptfgl_1_1traits_1_1printable.html", null ],

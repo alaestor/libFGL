@@ -5,6 +5,7 @@ var hierarchy =
     ] ],
     [ "stupid_lib::busy", "structstupid__lib_1_1busy.html", null ],
     [ "fgl::cbyte_ptr_wrapper< T >", "structfgl_1_1cbyte__ptr__wrapper.html", null ],
+    [ "fgl::circular_iterator< T_iter >", "classfgl_1_1circular__iterator.html", null ],
     [ "fgl::dynamic_linear_matrix_alias< T_iter, T_dimensions >", "classfgl_1_1dynamic__linear__matrix__alias.html", null ],
     [ "fgl::debug::echo", "structfgl_1_1debug_1_1echo.html", null ],
     [ "entity< T_position >", "structentity.html", null ],
@@ -13,6 +14,7 @@ var hierarchy =
     [ "fgl::debug::fixme", "structfgl_1_1debug_1_1fixme.html", null ],
     [ "fgl::debug::generic_stopwatch< T_clock >", "classfgl_1_1debug_1_1generic__stopwatch.html", null ],
     [ "fgl::multiton< T >", "classfgl_1_1multiton.html", null ],
+    [ "fgl::not_null< T, T_use_assertions, T_check_on_access >", "classfgl_1_1not__null.html", null ],
     [ "obj_impl", "classobj__impl.html", null ],
     [ "fgl::debug::output", "classfgl_1_1debug_1_1output.html", null ],
     [ "fgl::debug::output_config< entity< T_position > >", "classfgl_1_1debug_1_1output__config_3_01entity_3_01_t__position_01_4_01_4.html", null ],
@@ -37,6 +39,7 @@ var hierarchy =
     [ "fgl::debug::generic_stopwatch< T_clock >::statistics", "structfgl_1_1debug_1_1generic__stopwatch_1_1statistics.html", null ],
     [ "fgl::string_literal< N >", "structfgl_1_1string__literal.html", null ],
     [ "stupid_lib::Thing", "classstupid__lib_1_1_thing.html", null ],
+    [ "lib::toggle_null", "structlib_1_1toggle__null.html", null ],
     [ "with_overload", "structwith__overload.html", null ],
     [ "without_overload", "structwithout__overload.html", null ]
 ];

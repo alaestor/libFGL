@@ -25,7 +25,7 @@ var searchData=
   ['stopwatch_22',['stopwatch',['../group__group-debug-stopwatch.html#ga890a99983ec6fc2d67e1ee335da63ad6',1,'fgl::debug']]],
   ['stopwatch_2ehpp_23',['stopwatch.hpp',['../stopwatch_8hpp.html',1,'']]],
   ['stream_24',['stream',['../group__group-debug-output.html#ga14a1b82e98737dad25924ec3a649e097',1,'fgl::debug::output']]],
-  ['string_20literal_25',['String Literal',['../group__group-types-string-literal.html',1,'']]],
+  ['string_20literal_25',['String Literal',['../group__group-types-string__literal.html',1,'']]],
   ['string_5fliteral_26',['string_literal',['../structfgl_1_1string__literal.html',1,'fgl::string_literal&lt; N &gt;'],['../structfgl_1_1string__literal.html#a04dd4a8ecfabe5db07fb37ae1d8ee6d3',1,'fgl::string_literal::string_literal()']]],
   ['string_5fliteral_2ehpp_27',['string_literal.hpp',['../string__literal_8hpp.html',1,'']]],
   ['switch_5fmajor_28',['switch_major',['../classfgl_1_1dynamic__linear__matrix__alias.html#a60a0eb03c29971e72ff52658f8046656',1,'fgl::dynamic_linear_matrix_alias']]]
