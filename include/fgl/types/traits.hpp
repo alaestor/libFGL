@@ -51,6 +51,15 @@ concept numeric_type = std::integral<T> || std::floating_point<T>;
 template <typename T>
 concept pointer_type = std::is_pointer_v<T>;
 
+/// Satisfied if @p T can be compared to @c nullptr with @c == and @c != .
+template <typename T>
+concept null_comparable = requires (T t) {
+	//std::equality_comparable_with<T, std::nullptr_t>; silly C++  :(
+	//https://stackoverflow.com/questions/66937947/why-is-unique-ptr-not-equality-comparable-with-nullptr-t-in-c20
+	{ t == nullptr } -> std::same_as<bool>;
+	{ t != nullptr } -> std::same_as<bool>;
+};
+
 
 /// Satisfied if @p T1 and @p T2 are not the same.
 template <typename T1, typename T2>

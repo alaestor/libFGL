@@ -125,6 +125,16 @@ consteval bool test_pointer_type()
 	return true;
 }
 
+consteval bool test_null_comparable()
+{
+	using fgl::traits::null_comparable;
+	struct S { bool operator==(std::nullptr_t) const; };
+	static_assert(!null_comparable<int>);
+	static_assert(null_comparable<int*>);
+	static_assert(null_comparable<S>);
+	return true;
+}
+
 namespace test_steady_clock_ns{
 struct unsteady_clock
 {
@@ -271,5 +281,6 @@ int main()
 	static_assert(test_type_concepts());
 	static_assert(test_ref_traits());
 	static_assert(test_pointer_traits());
+	static_assert(test_null_comparable());
 	return EXIT_SUCCESS;
 }

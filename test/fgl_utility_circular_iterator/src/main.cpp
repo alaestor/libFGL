@@ -13,7 +13,7 @@
 #include <array>
 
 constexpr std::array<long long, 10> buffer{};
-constexpr fgl::circular_iterator c_iter{buffer.begin(), buffer.end()};
+constexpr fgl::circular_iterator c_iter{ buffer.begin(), buffer.end() };
 
 constexpr unsigned int mult{ 2 };
 
@@ -90,6 +90,59 @@ constexpr bool test_iteration_index()
 	return true;
 }
 
+constexpr bool test_wrapping()
+{
+	const auto test_wrapping_impl{
+		[&]<typename T>(const T range_size, const T imult)
+		-> bool
+		{
+			const T begin{ 0 };
+			const T end{ range_size };
+			const T size{ range_size };
+
+			const T should_be_begin1{ end*imult };
+			const T should_be_begin2{ begin*imult };
+			const T should_be_same{ begin*imult + size / 2 };
+			const T should_be_end_minus_one1{ (begin-size)*imult - 1 };
+			const T should_be_end_minus_one2{ end*imult - 1 };
+
+			constexpr_assert(fgl::wrap_index(should_be_begin1, size) == begin);
+			constexpr_assert(fgl::wrap_index(should_be_begin2, size) == begin);
+			constexpr_assert(fgl::wrap_index(should_be_same, size) == should_be_same);
+			constexpr_assert(fgl::wrap_index(should_be_end_minus_one1, size) == end - 1);
+			constexpr_assert(fgl::wrap_index(should_be_end_minus_one2, size) == end - 1);
+			return true;
+		}
+	};
+
+	const auto run_test_wrapping{
+		[&]<typename T>(T range_size)
+		{
+			constexpr_assert(test_wrapping_impl(range_size, 1));
+			constexpr_assert(test_wrapping_impl(range_size, 2));
+			constexpr_assert(test_wrapping_impl(range_size, 3));
+			constexpr_assert(test_wrapping_impl(range_size, 4));
+			constexpr_assert(test_wrapping_impl(range_size, 5));
+			constexpr_assert(test_wrapping_impl(range_size, 6));
+			constexpr_assert(test_wrapping_impl(range_size, 7));
+			constexpr_assert(test_wrapping_impl(range_size, 8));
+			constexpr_assert(test_wrapping_impl(range_size, 9));
+			constexpr_assert(test_wrapping_impl(range_size, 10));
+			constexpr_assert(test_wrapping_impl(range_size, 11));
+			return true;
+		}
+	};
+
+	constexpr_assert(run_test_wrapping(1));
+	constexpr_assert(run_test_wrapping(2));
+	constexpr_assert(run_test_wrapping(3));
+	constexpr_assert(run_test_wrapping(7));
+	constexpr_assert(run_test_wrapping(10));
+	constexpr_assert(run_test_wrapping(11));
+
+	return true;
+}
+
 
 constexpr bool test_iteration()
 {
@@ -126,8 +179,12 @@ constexpr bool test_arithmetic()
 
 int main()
 {
+	static_assert(test_wrapping());
 	static_assert(test_iteration());
 	static_assert(test_arithmetic());
+	assert(test_wrapping());
+	assert(test_iteration());
+	assert(test_arithmetic());
 
 	return EXIT_SUCCESS;
 }

@@ -8,6 +8,7 @@
 #include <string> // string, to_string
 #include <stdexcept> // runtime_error
 #include <concepts> // integral
+#include <vector>
 #include <filesystem>
 #include <fstream>
 #include <optional>

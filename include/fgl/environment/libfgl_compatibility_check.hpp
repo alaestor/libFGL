@@ -67,16 +67,15 @@
 	#endif
 #endif // FGL_ACKNOWLEDGE_INCOMPATIBLE_STANDARD
 
-// check compiler
+// Compiler checks
 #ifndef FGL_ACKNOWLEDGE_INCOMPATIBLE_COMPILER
-	#ifndef __GNUC__
-		#error "libFGL is only officially supported on GCC 12.0.1 and higher. Define FGL_ACKNOWLEDGE_INCOMPATIBLE_COMPILER to bypass this check."
-	#endif
-
-	#if (__GNUC__ < 12)
-		#error "libFGL is only officially supported on GCC 12.0.1 and higher. Define FGL_ACKNOWLEDGE_INCOMPATIBLE_COMPILER to bypass this check."
-	#elif (__GNUC_PATCHLEVEL__ < 1)
-		#error "libFGL is only officially supported on GCC 12.0.1 and higher. Define FGL_ACKNOWLEDGE_INCOMPATIBLE_COMPILER to bypass this check."
+	#ifdef __GNUC__
+		#define FGL_INTERNAL_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
+		#if (FGL_INTERNAL_GCC_VERSION < 120001L)
+			#error "libFGL requires GCC 12.0.1 or higher. Define FGL_ACKNOWLEDGE_INCOMPATIBLE_COMPILER to bypass this check."
+		#endif
+	#else
+		#error "libFGL requires GCC 12.0.1 or higher. Define FGL_ACKNOWLEDGE_INCOMPATIBLE_COMPILER to bypass this check."
 	#endif
 #endif // FGL_ACKNOWLEDGE_INCOMPATIBLE_COMPILER
 

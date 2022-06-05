@@ -12,9 +12,7 @@ This is a modern C++ header-only library that dreams of growing up to be refacto
 
 **Breaking changes are a feature. No support. No guarantees. Not for third-party production use.**
 
-Only GCC 12 or higher is officially compatible, but libFGL should work with any compiler which properly implements C++20.
-
-Contributions are unlikely to be accepted; [just open an issue](https://github.com/alaestor/libFGL/issues/new) to report a bug, or request a feature, or just to say "hi" if you're as lonely as us. Please submit an issue. Please. Just make up an error and report it; any human contact will be appreciated. It's been so long that I'm no longer convinced anyone is out there; the servers keep humming, but the species that made them has long since gone extinct — I'm all that's left.
+Only GCC 12 or higher is officially compatible, but libFGL should work with any compiler which properly implements C++20. Contributions are unlikely to be accepted; [just open an issue](https://github.com/alaestor/libFGL/issues/new) to report a bug, request a feature, or just to say "hi" if you're as lonely as us.
 
 [Click to view the documentation](https://alaestor.github.io/libFGL/)
 

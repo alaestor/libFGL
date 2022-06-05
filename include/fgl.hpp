@@ -19,7 +19,7 @@
 */
 
 /**
-@page page-fgl-older_versions Older Versions & Documentation
+@page page-fgl-older_versions Documentation for Older Versions
 @parblock
 	The documentation found here is only accurate for the latest version
 	of libFGL, which is always the most recent state of the main github
@@ -36,76 +36,162 @@
 @section page-fgl-about-compatibility Official Compatibility
 	Refer to @ref group-environment-libfgl_compatibility_check documentation.
 <hr  />
-@section page-fgl-getting_started-instrallation Installing and using libFGL
+@section page-fgl-getting_started-installation Installing and using libFGL
+@subsection page-fgl-getting_started-installation-conan With Conan
+	<ol type="1">
+	<li>
+		If you don't have it already, install
+		<a href="https://conan.io/">the Conan package manager</a>
+	</li>
+	<li>
+		Enable <a href="https://docs.conan.io/en/latest/versioning/revisions.html#how-to-activate-the-revisions">Package Revisions</a>
+		by adding <tt>revisions_enabled=1</tt> under <tt>[general]</tt> in
+		your @c conan.conf file (<tt>~/.conan/conan.conf</tt> on Linux, and
+		<tt>\%userprofile\%/.conan/conan.conf</tt> on Windows).
+	</li>
+	<li>
+		Add the libFGL remote by running
+		<tt>conan remote add fgl-conan https://fgl.jfrog.io/artifactory/api/conan/fgl-conan</tt>
+	</li>
+	<li>
+		Add libFGL as a <a href="https://docs.conan.io/en/latest/using_packages/conanfile_txt.html">conan dependency</a>
+
+		It's recommended to always use the latest version of libFGL by
+		requiring the @c latest alias on the @c main channel
+		@code
+		[requires]
+		libFGL/latest@alaestor/main
+		@endcode
+
+		Specific versions can be required by following the format
+		<tt>branch-commit</tt>, and the @c alaestor/CHANNEL channel can be
+		the name of the branch. For example:
+		@code
+		[requires]
+		libFGL/main-0123456789abcdef@alaestor/main
+		@endcode
+
+		@note @parblock
+			Some commits may not be available, including older commits before
+			conan was supported and commits on branches other than
+			<tt>main</tt>. Only the @c main branch is automatically packaged
+			when a new commit is pushed, but other branches may occasionally
+			be manually packaged.
+
+			You can list all available versions by running
+			<tt>conan search "libFGL/*" \--remote=fgl-conan</tt> (it may take a while).
+
+		@attention @parblock
+			A "live at head" approach is strongly recommended: don't pin to a
+			specific commit without good reason. <b>Breaking changes are a
+			feature, and interfaces will often change for good reason!</b>
+
+			Only use packages from the @c main branch which are packaged on
+			the <tt>@alaestor/main</tt> and <tt>@alaestor/stable</tt> channels.
+			Using other branches and channels are <b>strongly discouraged</b>.
+
+			Packages on the <tt>@alaestor/volatile</tt> channel are subject to
+			random revisions and deletions without warning and should be
+			viewed as <b>temporary</b>! They should avoided unless explicitly
+			directed by a maintainer (for example, when being used temporarily
+			as a trouble-shooting measure).
+		@endparblock
+		@endparblock
+	</li>
+	</ol>
+
+@subsection page-fgl-getting_started-installation-standalone Without Conan
+	<ol type="1">
+	<li>
+		Download the libFGL source to where ever you want to install it,
+		either by running <tt>git clone https://github.com/alaestor/libFGL.git</tt>
+		or by <a href="https://github.com/alaestor/libFGL/archive/refs/heads/main.zip">downloading it as a ZIP archive from Github</a>
+	</li>
+	<li>
+		Add the library include path when you compile.
+		<ul>
+		<li>
+			For <a href="https://clang.llvm.org/docs/ClangCommandLineReference.html#include-path-management">Clang</a>
+			and <a href="(https://gcc.gnu.org/onlinedocs/gcc/Directory-Options.html">GCC</a>
+			pass <tt>-I"your_path_to/libFGL/include"</tt> when compiling.
+		</li>
+		<li>
+			For <a href="https://docs.microsoft.com/en-us/cpp/preprocessor/hash-include-directive-c-cpp?view=msvc-170">MSVC</a>
+			pass <tt>/I"your_path_to/libFGL/include"</tt> when
+			compiling.
+		</li>
+		</ul>
+		Replace <i><tt>your_path_to</tt></i> with the path to where you
+		installed libFGL.
+	</li>
+	</ol>
+
+@subsection page-fgl-getting_started-installation-example_program Hello World
 	@parblock
-		<ol type="1">
-		<li>Download the libFGL source to where ever you'd like.</li>
-		<li>
-			Add the library include path when you compile.
-			<ul>
-			<li>
-				For <a href="https://clang.llvm.org/docs/ClangCommandLineReference.html#include-path-management">Clang</a>
-				and <a href="(https://gcc.gnu.org/onlinedocs/gcc/Directory-Options.html">GCC</a>
-				pass <tt>-I"your_path_to/libFGL/include"</tt> when compiling.
-			</li>
-			<li>
-				For <a href="https://docs.microsoft.com/en-us/cpp/preprocessor/hash-include-directive-c-cpp?view=msvc-170">MSVC</a>
-				pass <tt>/I"your_path_to/libFGL/include"</tt> when
-				compiling.
-			</li>
-			</ul>
-			Replace <i><tt>your_path_to</tt></i> with the path to where you
-			installed libFGL.
-		</li>
-		<li>
-			In your source file, include the components you want using
-			<tt><></tt> syntax
-			@code
-			// main.cpp
-			#include <array>
+	@code
+	// main.cpp
+	#include <array>
 
-			#include <FGLM> // all of libFGL + opt-in features
+	#include <FGLM> // all of libFGL + opt-in features
 
-			//#include <fgl.hpp> // all of libFGL without opt-in features
+	//#include <fgl.hpp> // all of libFGL without opt-in features
 
-			/// or you can be more selective:
-			// #define FGL_SHORT_MACROS
-			// #include <fgl/debug/constexpr_assert.hpp> // constexpr_assert
-			// #include <fgl/types/range_constraints.hpp> // sized_range_same_as
-			// #include <fgl/utility/zip.hpp> // czip
+	/// or you can be more selective:
+	// #define FGL_SHORT_MACROS
+	// #include <fgl/debug/constexpr_assert.hpp> // constexpr_assert
+	// #include <fgl/debug/output.hpp> // debug::output
+	// #include <fgl/types/range_constraints.hpp> // sized_range_same_as
+	// #include <fgl/utility/zip.hpp> // czip
 
-			/// silly example, implemented using fgl::zip
-			constexpr int sum_int_pairs(
-				const fgl::sized_range_same_as<int>& a,
-				const fgl::sized_range_same_as<int>& b)
-			{
-				int sum{ 0 };
-				for (const auto& [av, bv] : fgl::czip(a, b))
-					sum += av + bv;
-				return sum;
-			}
+	/// silly example, implemented using fgl::zip & range constraints
+	constexpr int sum_int_pairs(
+		const fgl::sized_range_same_as<int> auto& a,
+		const fgl::sized_range_same_as<int> auto& b)
+	{
+		int sum{ 0 };
+		for (const auto& [av, bv] : fgl::czip(a, b))
+			sum += av + bv;
+		return sum;
+	}
 
-			int main()
-			{
-				[]() consteval
-				{
-					constexpr std::array a{ 1, 1, 1 }; // 3 elements
-					std::array b{ 1, 1, 1, 1 }; // 4 elements, last will be ignored
-					constexpr_assert(sum_int_pairs(a, b) == 6);
-				}();
-			}
-			@endcode
-		</li>
-		<li>
-			You're done.
-		</li>
-		</ol>
+	int main()
+	{
+		[]() consteval
+		{
+			constexpr std::array a{ 1, 1, 1 }; // 3 elements
+			std::array b{ 1, 1, 1, 1 }; // 4 elements, last will be ignored
+			constexpr_assert(sum_int_pairs(a, b) == 6);
+		}();
 
-		Other than for testing, libFGL doesn't support any particular build
-		systems, package systems, or IDEs. You're on your own.
+		fgl::debug::output("Hello, world!");
+	}
+	@endcode
 
-		libFGL extensions will often require more elaborate dependencies and
-		compilation steps. Refer to the extension's documentation.
+	Example compiler arguments:
+
+	@code
+	g++ -std=c++20 -I"your_path_to/libFGL/include" main.cpp -o main.exe
+	@endcode
+
+	Output:
+	@code
+	[GENERIC] Hello, world!
+	@endcode
+
+	libFGL extensions will often require more elaborate dependencies and
+	compilation steps. Refer to the extension's documentation.
+
+	@note @parblock
+		Depending on how your compiler arguments and environment
+		configuration, you may need to include libFGL components with either
+		<tt>""</tt> or <tt><></tt> include syntax. Including as a system
+		header is recommended to avoid superfluous warning messages from
+		compilers which aren't officially compatible.
+
+		Other than for testing, libFGL doesn't have official guides or
+		compatibility with any particular build systems or IDEs. You're on
+		your own.
+		@endparblock
 	@endparblock
 <hr  />
 @section page-fgl-getting_started-running_tests Compiling and Running Tests
@@ -124,6 +210,41 @@
 		build and run all tests. If <tt>tup</tt> completes without warnings or
 		errors, then the library should be fully-functional on the platform
 		in question.
+
+		Example of success / passing
+@code{.unparsed}
+[ tup ] [0.000s] Scanning filesystem...
+[ tup ] [0.055s] Reading in new environment variables...
+[ tup ] [0.056s] No Tupfiles to parse.
+[ tup ] [0.056s] No files to delete.
+[ tup ] [0.057s] Executing Commands...
+ 67) [0.073s] test\fgl_environment_build_info: [C] notmain.cpp
+
+                      ...
+
+  1) [0.089s] test\fgl_utility_matrix: [L] main.o
+  0) [0.021s] test\fgl_utility_matrix: [TEST] fgl_utility_matrix.exe
+ [                   ETA=<1s Remaining=0  Active=0                    ] 100%
+[ tup ] [11.435s] Updated.
+	@endcode
+
+	Example of failure (where @c fgl_environment_build_info fails)
+	@code{.unparsed}
+[ tup ] [0.000s] Scanning filesystem...
+[ tup ] [0.027s] Reading in new environment variables...
+[ tup ] [0.028s] No Tupfiles to parse.
+[ tup ] [0.028s] No files to delete.
+[ tup ] [0.028s] Executing Commands...
+* 5) test\fgl_environment_build_info: [C] main.cpp
+src/main.cpp: In function 'int main()':
+src/main.cpp:13:23: error: static assertion failed
+   13 |         static_assert(fgl::debug_build);
+      |                       ^~~~~~~~~~~~~~~~~~~~
+ *** tup messages ***
+ *** Command ID=3396 failed with return value 1
+ [      ]  85%
+ *** tup: 1 job failed.
+	@endcode
 	@endparblock
 <hr  />
 @section page-fgl-getting_started-extentions Extentions for LibFGL
@@ -158,7 +279,7 @@
 		<b>Include Folder Structure</b>
 
 		The <tt>@ref fgl.hpp</tt> header includes all top-level
-		<tt>fgl/*.hpp</tt> headers, which themselves include headers from
+		<tt>*.hpp</tt> in @c fgl/ , which themselves include headers from
 		their namesake subdirectories; this recursive inclusion continues
 		until all library fascilities are included, except for experimental
 		and opt-in features.
@@ -341,7 +462,7 @@
 		@code{.sh}
 		### Unmodified. If you modify this, remove this line and document your changes.
 		include_rules
-		: foreach src/*.cpp | $(TEST_PREREQUISITE) |> !C |> $(TEST_OBJ_DIR)/%d/%B.o {test_objs}
+		: foreach src / *.cpp | $(TEST_PREREQUISITE) |> !C |> $(TEST_OBJ_DIR)/%d/%B.o {test_objs}
 		: {test_objs} |> !L |> $(TEST_BIN_DIR)/%d/%d.exe {unit_test}
 		: {unit_test} |> !RUN_TEST |> $(TEST_DIR)/<%d>
 		: | $(TEST_DIR)/<%d> |> !PASSTHROUGH |> <unit_test_results>

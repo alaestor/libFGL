@@ -17,6 +17,7 @@ class libFGL_conan(ConanFile):
 
 	def package(self):
 		self.copy("*.hpp")
+		self.copy("FGLM")
 
 	def package_id(self):
 		self.info.header_only()

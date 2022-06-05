@@ -9,6 +9,7 @@
 @details
 	<tt>#include <fgl/utility.hpp></tt> provides the following:
 	- @ref group-utility-bitwise
+	- @ref group-utility-circular_iterator
 	- @ref group-utility-enumerate
 	- @subpage page-fgl-header-utility-linear_matrix_alias
 	- @ref group-utility-make_byte_array

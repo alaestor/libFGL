@@ -15,9 +15,9 @@ namespace fgl {
 @file
 
 @example example/fgl/types/string_literal.cpp
-	An example for @ref group-types-string-literal
+	An example for @ref group-types-string_literal
 
-@defgroup group-types-string-literal String Literal
+@defgroup group-types-string_literal String Literal
 
 @brief A wrapper for string literals
 
@@ -67,7 +67,7 @@ struct string_literal
 	constexpr const char* cend() const noexcept { return &array[N-1]; }
 };
 
-///@} group-types-string-literal
+///@} group-types-string_literal
 } // namespace fgl
 
 #endif // FGL_TYPES_STRING_LITERAL_HPP_INCLUDED
