@@ -19,18 +19,17 @@
 	compile-time evaluation.
 
 @remarks
-	You might ask <i>"why does this exist? Just use <tt>assert</tt>!"</i>, but
-	I promise you that I'm not crazy. Well, maybe a little, but that's not
-	important right now. Calling non-<tt>constexpr</tt> functions at
-	compile-time is "ill-formed, no diagnostic required". Nearly all
-	implementations of <tt>assert</tt> will call an implementation-defined
-	built-in function if the assertion fails. This means that the compiler
-	isn't <i>required</i> to stop compilation and emit an error when
-	<tt>assert(false);</tt> is evaluated at compile-time. Of couirse, will
-	nearly all compilers fail and emit an error? Yes! Do they have to? No.
-	Hence, why this exists. Unlike <tt>assert(false)</tt>, a compile-time
-	evaluated <tt>constexpr_assert(false)</tt> guarentees compilation failure
-	and should cause the compiler to emit a relevant diagnostic message.
+	Calling non-<tt>constexpr</tt> functions at compile-time is "ill-formed,
+	no diagnostic required". Nearly all implementations of <tt>assert</tt>
+	will call an implementation-defined built-in function if the assertion
+	fails. This means that the compiler isn't <i>required</i> to stop
+	compilation and emit an error when <tt>assert(false);</tt> is evaluated at
+	compile-time. Of couirse, nearly all compilers will fail compilation and
+	emit an error, but they aren't <b>required to</b> by the standard; this
+	exists to guarentee that behavior. Unlike <tt>assert(false)</tt>, a
+	compile-time evaluated <tt>constexpr_assert(false)</tt> guarentees
+	compilation failure and should cause the compiler to emit a relevant
+	diagnostic message.
 
 	@see the example program @ref example/fgl/debug/constexpr_assert.cpp
 
@@ -41,42 +40,43 @@
 
 #ifdef NDEBUG
 	#ifndef FGL_DEBUG_CONSTEXPR_ASSERT
-		#define FGL_DEBUG_CONSTEXPR_ASSERT(message)
+		#define FGL_DEBUG_CONSTEXPR_ASSERT(assertion)
 	#else
 		#error FGL_DEBUG_CONSTEXPR_ASSERT already defined
 	#endif // ifndef FGL_DEBUG_CONSTEXPR_ASSERT
 #else
 	#ifndef FGL_DEBUG_CONSTEXPR_ASSERT
-		/**
-		@copybrief group-debug-constexpr_assert
+	// not indenting for error message readability
+	/**
+	@copybrief group-debug-constexpr_assert
 
-		@details If <tt>constexpr_assert</tt> is evaluated at runtime, the
-			expression is evaluated within a standard <tt>assert</tt>, but if
-			it's evaluated at compile-time and the expression is resolves to
-			<tt>false</tt>, then a compile-time error will be generated via
-			an empty <tt>throw</tt> (which is explicitly illegal in a
-			compile-time context).
+	@details If <tt>constexpr_assert</tt> is evaluated at runtime, the
+		expression is evaluated within a standard <tt>assert</tt>, but if
+		it's evaluated at compile-time and the expression is resolves to
+		<tt>false</tt>, then a compile-time error will be generated via
+		an empty <tt>throw</tt> (which is explicitly illegal in a
+		compile-time context).
 
-		@see @ref page-fgl-macros
+	@see @ref page-fgl-macros
 
-		@note Just like the standard <tt>assert</tt>, <tt>constexpr_assert</tt>
-			can be disabled by defining <tt>NDEBUG</tt> before inclusion. The
-			expression will not be evaluated.
+	@note Just like the standard <tt>assert</tt>, <tt>constexpr_assert</tt>
+		can be disabled by defining <tt>NDEBUG</tt> before inclusion. The
+		expression will not be evaluated.
 
-		@param assertion An expression which is evaluated as boolean
-			<tt>true</tt> or <tt>false</tt> (via <tt>static_cast</tt>).
-		*/
-		#define FGL_DEBUG_CONSTEXPR_ASSERT(assertion) \
-			if (std::is_constant_evaluated())\
-			{/* ignore warning that occurs in noexcept functions */\
-				_Pragma("GCC diagnostic push")\
-				_Pragma("GCC diagnostic ignored \"-Wterminate\"")\
-				_Pragma("GCC diagnostic ignored \"-Wuseless-cast\"")\
-				if (static_cast<bool>(assertion) == false)\
-					{ throw; } /* ASSERTION FAILED */\
-				_Pragma("GCC diagnostic pop")\
-			}\
-			else assert((assertion));
+	@param assertion An expression which is evaluated as boolean
+		<tt>true</tt> or <tt>false</tt> (via <tt>static_cast</tt>).
+	*/
+	#define FGL_DEBUG_CONSTEXPR_ASSERT(assertion) \
+	if (std::is_constant_evaluated())\
+	{/* ignore warning that occurs in noexcept functions */\
+	_Pragma("GCC diagnostic push")\
+	_Pragma("GCC diagnostic ignored \"-Wterminate\"")\
+	_Pragma("GCC diagnostic ignored \"-Wuseless-cast\"")\
+	if (static_cast<bool>(assertion) == false)\
+	{ throw; } /* COMPILE-TIME ASSERTION FAILED */\
+	_Pragma("GCC diagnostic pop")\
+	}\
+	else assert((assertion));
 	#else
 		#error FGL_DEBUG_CONSTEXPR_ASSERT already defined
 	#endif // ifndef FGL_DEBUG_CONSTEXPR_ASSERT
